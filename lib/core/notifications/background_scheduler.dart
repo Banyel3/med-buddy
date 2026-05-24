@@ -9,15 +9,12 @@ class BackgroundScheduler {
   static const _reArmTask = 'medbuddy_reArmReminders';
 
   static Future<void> init() async {
-    await Workmanager().initialize(
-      _callbackDispatcher,
-      isInDebugMode: false,
-    );
+    await Workmanager().initialize(_callbackDispatcher);
     await Workmanager().registerPeriodicTask(
       _reArmTask,
       _reArmTask,
       frequency: const Duration(hours: 12),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
     );
   }
 }
