@@ -11,8 +11,8 @@ Living checklist. Tick as done. Order = do top → bottom.
 | 1 — Foundation | ✅ | env + Supabase | analyze clean |
 | 2 — Verification | ✅ | drop tflite + camera perms | YOLOv8 decoder ready |
 | 3 — Android lock | ✅ | enable accessibility on device | real-device test only |
-| 4 — Dashboard | ✅ | npm install + Vercel + edge fn | schema.sql ready |
-| 5 — Polish | ⏳ | many — see §5 | ongoing |
+| 4 — Dashboard | ✅ | npm install + Vercel + edge fns | schema.sql ready |
+| 5 — Polish | ✅ code-side | external assets (icon, splash, FCM, Sentry DSN) | iOS modal fallback live |
 | 6 — PH market | ⏳ | future | future |
 
 ---
@@ -78,25 +78,28 @@ Living checklist. Tick as done. Order = do top → bottom.
 
 ---
 
-## 5. Phase 5 — Polish (ongoing)
+## 5. Phase 5 — Polish
 
-Code work I can still do without external assets:
+Code-side ✅ done:
+- [x] Profile screen (sign-out, monitor link code, dark-mode toggle, credits link)
+- [x] Dark mode (full Material 3 dark scheme + system / manual override)
+- [x] Credits & licenses screen (seblful + ML Kit + fonts + SDK)
+- [x] iOS modal fallback lock (LockGate wraps app; listens to `lockedNotifier`)
+- [x] daily-rollover Edge Function (mark pending → missed + reset broken streaks)
+- [x] storage-ttl Edge Function (auto-purge verification photos > 30 days)
+- [x] Privacy policy page (`nextjs-dashboard/app/privacy/page.tsx`)
+- [x] GitHub Actions CI (.github/workflows/ci.yml — flutter + dashboard)
+- [x] Home empty-state when no medications + CTA to add
+- [x] Late-confidence log on verification failure (monitor sees attempts)
 
-- [ ] Empty states for Home + History when no data yet
-- [ ] Profile screen: sign-out button + show monitor link code + edit medication time
-- [ ] Multi-medication CRUD UI (currently only seeded by onboarding)
-- [ ] Dark mode pass (Material 3 dark scheme already half-defined — wire to system pref)
-- [ ] FCM device-token registration: on app boot, request FCM token, upsert into `device_tokens` table
-- [ ] Storage 30-day TTL Edge Function — purge old verification photos
-- [ ] Streak milestone animation on each new milestone day (Lottie placeholder OK)
-- [ ] Failed-verification log: record `late` / `pending` status if confidence below threshold so monitor can see attempts
-- [ ] In-app credits screen (seblful YOLOv8 CC BY 4.0 attribution + open-source deps)
-- [ ] Privacy policy page (HTML in nextjs-dashboard/app/privacy/page.tsx — required for Play Store + camera perm)
-- [ ] App icon: replace Flutter default in `android/app/src/main/res/mipmap-*` and `ios/Runner/Assets.xcassets/AppIcon.appiconset` (need 1024×1024 PNG)
-- [ ] Splash screen branding (currently Flutter default white)
-- [ ] Crashlytics or Sentry hook in `lib/main.dart`
-- [ ] CI: GitHub Actions workflow — `flutter analyze` + `flutter test` on every PR
-- [ ] iOS Modal fallback lock (Phase 3 left this as graceful no-op — implement full-screen `showModalBottomSheet` flow inside MedBuddy when notification fires)
+Still requires external assets — out of pure code reach:
+- [ ] FCM device-token registration (needs Firebase project + add `firebase_messaging` dep + iOS APNs cert)
+- [ ] App icon — replace Flutter default in `android/.../mipmap-*` + `ios/.../AppIcon.appiconset` (need 1024×1024 PNG)
+- [ ] Splash screen branding (need Lottie or PNG)
+- [ ] Crashlytics / Sentry — add SDK + paste DSN
+- [ ] Multi-medication CRUD UI extension (low value until you actually need 2nd med)
+- [ ] Streak milestone Lottie animation (need .json asset)
+- [ ] Schedule both Edge Functions in Supabase Cron: `daily-rollover` at 00:05 Asia/Manila, `storage-ttl` at 00:30 UTC
 
 ## 6. Phase 6 — PH market (future)
 

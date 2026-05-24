@@ -21,6 +21,8 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).valueOrNull;
     final streak = ref.watch(streakProvider).valueOrNull;
     final nextMed = ref.watch(nextMedicationProvider);
+    final medsAsync = ref.watch(medicationsProvider);
+    final hasMeds = (medsAsync.valueOrNull ?? const []).isNotEmpty;
     final isTablet = DeviceUtils.isTablet(context);
 
     return SafeArea(
@@ -50,13 +52,19 @@ class HomeScreen extends ConsumerWidget {
                 _GoalCard(),
               ],
               const SizedBox(height: AppDimensions.space24),
-              _MedicationCard(
-                title: nextMed?.name ?? 'Iron + Creatine',
-                time: nextMed?.scheduleTime != null
-                    ? nextMed!.scheduleTime.format(context)
-                    : '12:30 PM',
-                onTake: () => context.goNamed(AppRoute.verification),
-              ),
+              if (!hasMeds && medsAsync.hasValue)
+                _NoMedsCta(
+                  onAdd: () =>
+                      context.goNamed(AppRoute.onboardingMedication),
+                )
+              else
+                _MedicationCard(
+                  title: nextMed?.name ?? 'Iron + Creatine',
+                  time: nextMed?.scheduleTime != null
+                      ? nextMed!.scheduleTime.format(context)
+                      : '12:30 PM',
+                  onTake: () => context.goNamed(AppRoute.verification),
+                ),
             ],
           ),
         ),
@@ -182,6 +190,44 @@ class _GoalCard extends StatelessWidget {
           Text(
             '${current.toStringAsFixed(0)} / ${target.toStringAsFixed(0)} kg',
             style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoMedsCta extends StatelessWidget {
+  final VoidCallback onAdd;
+  const _NoMedsCta({required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.space24),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        border: Border.all(color: AppColors.outline, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.medical_information_rounded,
+              color: AppColors.primary, size: 32),
+          const SizedBox(height: AppDimensions.space8),
+          Text('No medications yet',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 4),
+          Text(
+            'Add your first medication to start a streak.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppDimensions.space16),
+          PrimaryButton(
+            label: 'Add medication',
+            icon: Icons.add_rounded,
+            onPressed: onAdd,
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -81,9 +82,37 @@ class VerificationController extends StateNotifier<VerificationState> {
           passed: passed,
         ),
       );
+      if (!passed) {
+        // Log the attempt as 'late' so the monitor can see effort even
+        // when AI confidence didn't clear the threshold. Fire-and-forget.
+        unawaited(_logAttempt(faceConf, pillConf));
+      }
     } catch (e, st) {
       debugPrint('VerificationController.analyzeCapture error: $e\n$st');
       state = state.copyWith(analyzing: false, error: e.toString());
+    }
+  }
+
+  Future<void> _logAttempt(double faceConf, double pillConf) async {
+    try {
+      final user = _ref.read(currentSupabaseUserProvider);
+      if (user == null) return;
+      final med = _ref.read(nextMedicationProvider);
+      final now = DateTime.now();
+      await _ref.read(supabaseServiceProvider).writeLog(
+            ComplianceLogModel(
+              id: '',
+              medicationId: med?.id ?? '',
+              userId: user.id,
+              date: DateTime(now.year, now.month, now.day),
+              status: ComplianceStatus.late,
+              verifiedAt: now,
+              faceConfidence: faceConf,
+              pillConfidence: pillConf,
+            ),
+          );
+    } catch (e) {
+      debugPrint('logAttempt error: $e');
     }
   }
 
