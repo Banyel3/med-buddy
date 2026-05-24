@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 
@@ -29,15 +28,12 @@ class PillDetectionService {
     if (_interpreter != null) return true;
     if (_loadFailed) return false;
     try {
-      // Verify the asset is present before attempting Interpreter.fromAsset.
-      await rootBundle.load(_modelAsset);
       _interpreter = await Interpreter.fromAsset(_modelAsset);
-      debugPrint('PillDetectionService: model loaded');
       return true;
     } catch (e) {
       _loadFailed = true;
-      debugPrint(
-          'PillDetectionService: model not available ($e). Drop pills_detection.tflite into assets/models/ to enable.');
+      debugPrint('PillDetectionService: model not available ($e). '
+          'Drop pills_detection.tflite into assets/models/ to enable.');
       return false;
     }
   }
@@ -57,44 +53,36 @@ class PillDetectionService {
 
   double _runInference(img.Image image) {
     final resized = img.copyResize(image,
-        width: _inputSize, height: _inputSize, interpolation: img.Interpolation.linear);
+        width: _inputSize,
+        height: _inputSize,
+        interpolation: img.Interpolation.linear);
 
-    // Build [1, 640, 640, 3] float input normalized to [0,1].
-    final input = List.generate(
-      1,
-      (_) => List.generate(
-        _inputSize,
-        (y) => List.generate(
-          _inputSize,
-          (x) {
-            final p = resized.getPixel(x, y);
-            return [p.r / 255.0, p.g / 255.0, p.b / 255.0];
-          },
-        ),
-      ),
-    );
-
-    // Output buffer for [1, 4+num_classes, num_anchors].
-    final output = List.generate(
-      1,
-      (_) => List.generate(
-        4 + _numClasses,
-        (_) => List<double>.filled(_numAnchors, 0.0),
-      ),
+    // Tight Float32List fill — single allocation, no boxed doubles.
+    final flat = Float32List(_inputSize * _inputSize * 3);
+    var idx = 0;
+    for (var y = 0; y < _inputSize; y++) {
+      for (var x = 0; x < _inputSize; x++) {
+        final p = resized.getPixel(x, y);
+        flat[idx++] = p.r / 255.0;
+        flat[idx++] = p.g / 255.0;
+        flat[idx++] = p.b / 255.0;
+      }
+    }
+    final input = flat.reshape([1, _inputSize, _inputSize, 3]);
+    final output =
+        Float32List(1 * (4 + _numClasses) * _numAnchors).reshape(
+      [1, 4 + _numClasses, _numAnchors],
     );
 
     _interpreter!.run(input, output);
 
-    // Take max confidence over class channels & anchors.
     double best = 0.0;
     for (var c = 4; c < 4 + _numClasses; c++) {
       for (var a = 0; a < _numAnchors; a++) {
-        final v = output[0][c][a];
+        final v = output[0][c][a] as double;
         if (v > best) best = v;
       }
     }
-    // YOLOv8 outputs raw class logits with sigmoid-ish range in
-    // ultralytics export when using --int8=false. Clamp 0..1.
     return best.clamp(0.0, 1.0).toDouble();
   }
 

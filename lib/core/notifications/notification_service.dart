@@ -112,7 +112,7 @@ class NotificationService {
       'Verify your dose to unlock your phone.',
       ScheduleMath.nextInstanceOf(
           ScheduleMath.addMinutes(time, 30), tz.local),
-      _details.copyWithPayload('lock-activate'),
+      _details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -130,6 +130,4 @@ class NotificationService {
 
 }
 
-extension on NotificationDetails {
-  NotificationDetails copyWithPayload(String _) => this;
-}
+

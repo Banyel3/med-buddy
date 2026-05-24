@@ -1,11 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-
-// Verifies the no-op contract: miss-alert only fires when status === 'missed'.
-// Pure logic extracted for testability.
-
-export function shouldFireMissAlert(record: { status: string }): boolean {
-  return record.status === 'missed';
-}
+import { shouldFireMissAlert } from '../miss-alert/index.ts';
 
 Deno.test('miss-alert: ignores verified status', () => {
   assertEquals(shouldFireMissAlert({ status: 'verified' }), false);

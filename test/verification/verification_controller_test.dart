@@ -31,8 +31,6 @@ class _FakeFace implements FaceDetectionService {
   Future<double> detectFromCameraImage(image, camera) async => value;
   @override
   Future<void> dispose() async {}
-  @override
-  noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
 class _FakePill implements PillDetectionService {
@@ -46,8 +44,6 @@ class _FakePill implements PillDetectionService {
   Future<double> detectFromBytes(bytes) async => value;
   @override
   void dispose() {}
-  @override
-  noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
 class _MockSupabaseService extends Mock implements SupabaseService {}

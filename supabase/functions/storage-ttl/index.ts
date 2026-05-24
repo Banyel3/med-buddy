@@ -8,6 +8,7 @@
 // ---------------------------------------------------------------
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { isPhotoExpired } from '../_shared/streak_math.ts';
 
 const RETENTION_DAYS = 30;
 
@@ -17,8 +18,7 @@ Deno.serve(async () => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
+  const now = new Date();
 
   // List all top-level folders (one per user).
   const { data: folders, error: listErr } = await supabase.storage
@@ -40,10 +40,13 @@ Deno.serve(async () => {
     if (!files) continue;
 
     const expired = files
-      .filter((f) => {
-        const created = f.created_at ? new Date(f.created_at) : null;
-        return created !== null && created < cutoff;
-      })
+      .filter((f) =>
+        isPhotoExpired(
+          f.created_at ? new Date(f.created_at) : null,
+          RETENTION_DAYS,
+          now,
+        ),
+      )
       .map((f) => `${folder.name}/${f.name}`);
 
     if (expired.length > 0) {

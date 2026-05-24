@@ -59,11 +59,12 @@ class VerificationState {
 }
 
 class VerificationController extends StateNotifier<VerificationState> {
-  VerificationController(this._ref, {
-    FaceDetectionService? face,
-    PillDetectionService? pill,
-  })  : _face = face ?? FaceDetectionService(),
-        _pill = pill ?? PillDetectionService(),
+  VerificationController(
+    this._ref, {
+    required FaceDetectionService face,
+    required PillDetectionService pill,
+  })  : _face = face,
+        _pill = pill,
         super(const VerificationState());
 
   final Ref _ref;
@@ -74,8 +75,12 @@ class VerificationController extends StateNotifier<VerificationState> {
     state = state.copyWith(
         analyzing: true, clearError: true, clearResult: true);
     try {
-      final faceConf = await _face.detectFromFile(filePath);
-      final pillConf = await _pill.detectFromFile(filePath);
+      final results = await Future.wait([
+        _face.detectFromFile(filePath),
+        _pill.detectFromFile(filePath),
+      ]);
+      final faceConf = results[0];
+      final pillConf = results[1];
       final passed = faceConf >= VerificationResult.faceThreshold &&
           pillConf >= VerificationResult.pillThreshold;
       state = state.copyWith(

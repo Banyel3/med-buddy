@@ -42,6 +42,12 @@ interface MissedPayload {
   record?: { id?: string };
 }
 
+/// Pure predicate — `miss-alert` only fans out FCM when the
+/// authoritative DB row's status is exactly `'missed'`. Exported so
+/// `_tests/miss_alert_test.ts` exercises the actual production logic.
+export const shouldFireMissAlert = (row: { status: string }): boolean =>
+  row.status === 'missed';
+
 Deno.serve(async (req) => {
   // --- Authn: shared-secret header (constant-time) ---
   const auth = checkWebhookSecret(req, Deno.env.get('WEBHOOK_SECRET'));
@@ -74,23 +80,23 @@ Deno.serve(async (req) => {
     if (!log) {
       return new Response('not found', { status: 404 });
     }
-    if (log.status !== 'missed') {
+    if (!shouldFireMissAlert(log)) {
       // Webhook fired in a race / row got fixed. No-op.
       return new Response('ignored: status not missed', { status: 200 });
     }
 
     const userId: string = log.user_id;
 
-    const { data: patient } = await supabase
-      .from('users')
-      .select('name')
-      .eq('id', userId)
-      .maybeSingle();
-
-    const { data: links } = await supabase
-      .from('monitor_links')
-      .select('monitor_id')
-      .eq('patient_id', userId);
+    // Independent reads — fan out in parallel.
+    const [patientRes, linksRes] = await Promise.all([
+      supabase.from('users').select('name').eq('id', userId).maybeSingle(),
+      supabase
+        .from('monitor_links')
+        .select('monitor_id')
+        .eq('patient_id', userId),
+    ]);
+    const patient = patientRes.data;
+    const links = linksRes.data;
 
     if (!links || links.length === 0) {
       return new Response('no monitors', { status: 200 });

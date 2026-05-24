@@ -66,11 +66,14 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState s) {
     final c = _camera;
-    if (c == null) return;
     if (s == AppLifecycleState.inactive) {
-      c.dispose();
+      if (c?.value.isInitialized ?? false) c!.pausePreview();
     } else if (s == AppLifecycleState.resumed) {
-      _bootstrap();
+      if (c == null || !c.value.isInitialized) {
+        _bootstrap();
+      } else {
+        c.resumePreview();
+      }
     }
   }
 
