@@ -1,89 +1,128 @@
 # MedBuddy — TODO
 
-Living checklist. Tick as done. Order = do top→bottom.
+Living checklist. Tick as done. Order = do top → bottom.
 
 ---
 
-## 0. One-time machine setup (you, before next `flutter run`)
+## Phase status
+
+| Phase | Code complete | Manual setup left | Notes |
+|-------|---------------|-------------------|-------|
+| 1 — Foundation | ✅ | env + Supabase | analyze clean |
+| 2 — Verification | ✅ | drop tflite + camera perms | YOLOv8 decoder ready |
+| 3 — Android lock | ✅ | enable accessibility on device | real-device test only |
+| 4 — Dashboard | ✅ | npm install + Vercel + edge fn | schema.sql ready |
+| 5 — Polish | ⏳ | many — see §5 | ongoing |
+| 6 — PH market | ⏳ | future | future |
+
+---
+
+## 0. One-time machine setup
 
 - [ ] `flutter doctor -v` — confirm Android toolchain green
-- [ ] Android Studio installed → Device Manager → create AVD with **ARM image** (API 34+), NOT x86 (M4 chip)
+- [ ] Android Studio → Device Manager → create AVD with **ARM image** (API 34+), NOT x86 (M4 chip)
 - [ ] Plug in real Android device (Samsung A / Redmi / realme) → enable USB debugging → `flutter devices` shows it
-- [ ] Java 17 ≤ JDK < 25 — current Java may conflict with Gradle 8.14 (warning during `flutter create`). Fix: `flutter config --jdk-dir=<path-to-jdk17>` if Gradle errors
+- [ ] Java 17 ≤ JDK < 25 — current Java may conflict with Gradle 8.14 warning. Fix: `flutter config --jdk-dir=<path-to-jdk17>` if Gradle errors
+- [ ] `node -v` ≥ 18 + `npm -v` ≥ 9 (for Next.js dashboard)
+- [ ] Install Supabase CLI: `brew install supabase/tap/supabase`
+- [ ] Install Vercel CLI: `npm i -g vercel`
 
-## 1. Supabase project (blocks login + everything backend)
+## 1. Supabase project (blocks everything backend)
 
-- [ ] Create project at https://supabase.com (free tier OK)
-- [ ] Copy `Project URL` + `anon public` key → paste into `.env`
-- [ ] Run schema SQL (PRD §7) — create tables: `users`, `monitor_links`, `medications`, `compliance_logs`, `streaks`
-  - [ ] Enable Row Level Security on each table
-  - [ ] Policy: patient reads own rows; monitor reads via `monitor_links` join
-- [ ] Storage → create private bucket `verifications` (signed URL only)
-- [ ] Auth → enable Email provider; disable email confirmation in dev for fast iteration
-- [ ] Sanity check: `flutter run` → sign up → confirm row appears in `auth.users`
+- [ ] Create project at https://supabase.com
+- [ ] Copy `Project URL` + `anon public` key → paste into `.env` (root) AND `nextjs-dashboard/.env.local`
+- [ ] Copy `service_role` key into `nextjs-dashboard/.env.local` as `SUPABASE_SERVICE_ROLE_KEY`
+- [ ] Run `supabase/schema.sql` in Supabase SQL editor (creates all 6 tables, enum types, streak trigger, RLS policies)
+- [ ] Storage → create private bucket `verifications` → uncomment + run the two `storage.objects` policies at the bottom of `schema.sql`
+- [ ] Auth → enable Email provider; toggle off email confirmation for dev
+- [ ] After first sign-up: manually insert a `users` row (`id = auth.users.id`, name, role) — or wire a trigger later
 
-## 2. Phase 1 smoke test
+## 2. Phase 1 smoke test (UI shell)
 
 - [ ] `flutter pub get`
-- [ ] `flutter analyze` — must report **No issues found**
-- [ ] `flutter run` on ARM emulator — boots to splash → login
-- [ ] Sign up → onboarding flow → land on Home with adaptive scaffold
-- [ ] Resize emulator past 600dp width → NavigationRail appears (tablet mode)
+- [ ] `flutter analyze` → No issues found
+- [ ] `flutter run` on ARM emulator — splash → login → onboarding (4 steps) → home
+- [ ] Resize past 600dp → NavigationRail appears
 - [ ] History tab → empty calendar renders
-- [ ] Notifications: grant permission when asked; verify 12:30 PM reminder fires (test by changing system clock)
+- [ ] Notifications: grant permission; verify 12:30 PHT reminder fires (system-clock test)
 
-## 3. Phase 2 — Verification (AI vision)
+## 3. Phase 2 — Verification ✅ code done, manual:
 
-- [ ] Clone `seblful/pills-detection`, grab `best.pt`
+- [ ] Clone `seblful/pills-detection` → grab `best.pt`
 - [ ] `pip install ultralytics` → `python -c "from ultralytics import YOLO; YOLO('best.pt').export(format='tflite')"`
 - [ ] Drop `pills_detection.tflite` into `assets/models/`
-- [ ] Implement `lib/features/verification/services/face_detection_service.dart` (google_mlkit_face_detection)
-- [ ] Implement `lib/features/verification/services/pill_detection_service.dart` (tflite_flutter)
-- [ ] Build real `verification_screen.dart` — camera preview + face oval + pill box + dual-confidence gate
-- [ ] On success: capture frame → upload to `verifications` bucket → write `compliance_logs` row → bump `streaks`
-- [ ] On failure: friendly retry, no miss count
-- [ ] Add seblful credit to in-app credits (CC BY 4.0)
+- [ ] Add seblful credit (CC BY 4.0) to in-app credits screen (TBD Phase 5)
+- [ ] Real-device test: capture flow → MLKit face → TFLite pill → upload → log row in Supabase
 
-## 4. Phase 3 — Android accessibility lock (real device only)
+## 4. Phase 3 — Android accessibility lock ✅ code done, manual:
 
-- [ ] Flesh out `MedBuddyAccessibility.kt` — intercept BACK + HOME, listen window state changes
-- [ ] Create `LockOverlayService.kt` — `TYPE_ACCESSIBILITY_OVERLAY` window
-- [ ] `accessibility_lock_service.dart` — MethodChannel bridge (`activate` / `deactivate`)
-- [ ] Onboarding deep-link to Settings → Accessibility → MedBuddy, wait for grant
-- [ ] Wire T+30min escalation notification → `activate()`
-- [ ] Wire verification success → `deactivate()`
-- [ ] Fallback: if perm denied → in-app full-screen modal (no crash)
-- [ ] Test on min 2 devices (Samsung One UI + Xiaomi MIUI / realme UI)
+- [ ] Real Android device (emulator unreliable for system overlays)
+- [ ] After first install: Settings → Accessibility → MedBuddy → Enable
+- [ ] Settings → Apps → MedBuddy → Display over other apps → Allow
+- [ ] Smoke test: trigger `lock-activate` notification → overlay appears → BACK/HOME bounces back → verify dose → overlay clears
+- [ ] Test on Samsung One UI (Knox quirks) + Xiaomi MIUI / realme UI (autostart restrictions)
+- [ ] Confirm emergency dialer + Settings → Accessibility always pass through
 
-## 5. Phase 4 — Next.js monitor dashboard
+## 5. Phase 4 — Next.js monitor dashboard ✅ code done, manual:
 
-- [ ] `npx create-next-app@latest nextjs-dashboard --typescript --tailwind --app` (sibling dir)
-- [ ] Tailwind theme tokens = MedBuddy palette (PRD §8.1)
-- [ ] `npm i @supabase/supabase-js recharts`
-- [ ] Pages: dashboard (miss banner + today hero + 7-day bar chart + photo grid + month calendar + streak)
-- [ ] Supabase Realtime subscription on `compliance_logs`
-- [ ] Supabase Edge Function (Deno) — fires on `status → missed`, sends FCM/web push to monitor
-- [ ] `vercel --prod` deploy
+- [ ] `cd nextjs-dashboard && npm install` (already done if you ran it)
+- [ ] `cp .env.local.example .env.local` → fill 3 keys
+- [ ] `npm run dev` → http://localhost:3000 → sign in
+- [ ] Manually insert a `monitor_links` row linking your monitor account to the patient account
+- [ ] Confirm dashboard live-updates when patient verifies a dose (Supabase Realtime)
+- [ ] Deploy: `vercel --prod` → set the 3 env vars in Vercel project settings
+- [ ] `supabase functions deploy miss-alert`
+- [ ] `supabase secrets set FCM_SERVER_KEY=...` (get from Firebase console)
+- [ ] Add Database Webhook in Supabase: table=compliance_logs, event=UPDATE, condition=`new.status='missed' AND old.status!='missed'`, URL=function URL
+- [ ] Wire FCM device-token registration in mobile app (Phase 5 — see below)
 
-## 6. Phase 5 — Polish
+---
 
-- [ ] Lottie pill mascot for lock + verification success
-- [ ] Streak milestone animation on each milestone day
-- [ ] Multi-medication UI (morning + evening schedules)
-- [ ] Onboarding fine-tune (timer feels < 5 min end-to-end)
-- [ ] Empty states for History + Home when zero data
-- [ ] Dark mode pass (PRD doesn't require but worth ~2hr)
+## 5. Phase 5 — Polish (ongoing)
+
+Code work I can still do without external assets:
+
+- [ ] Empty states for Home + History when no data yet
+- [ ] Profile screen: sign-out button + show monitor link code + edit medication time
+- [ ] Multi-medication CRUD UI (currently only seeded by onboarding)
+- [ ] Dark mode pass (Material 3 dark scheme already half-defined — wire to system pref)
+- [ ] FCM device-token registration: on app boot, request FCM token, upsert into `device_tokens` table
+- [ ] Storage 30-day TTL Edge Function — purge old verification photos
+- [ ] Streak milestone animation on each new milestone day (Lottie placeholder OK)
+- [ ] Failed-verification log: record `late` / `pending` status if confidence below threshold so monitor can see attempts
+- [ ] In-app credits screen (seblful YOLOv8 CC BY 4.0 attribution + open-source deps)
+- [ ] Privacy policy page (HTML in nextjs-dashboard/app/privacy/page.tsx — required for Play Store + camera perm)
+- [ ] App icon: replace Flutter default in `android/app/src/main/res/mipmap-*` and `ios/Runner/Assets.xcassets/AppIcon.appiconset` (need 1024×1024 PNG)
+- [ ] Splash screen branding (currently Flutter default white)
+- [ ] Crashlytics or Sentry hook in `lib/main.dart`
+- [ ] CI: GitHub Actions workflow — `flutter analyze` + `flutter test` on every PR
+- [ ] iOS Modal fallback lock (Phase 3 left this as graceful no-op — implement full-screen `showModalBottomSheet` flow inside MedBuddy when notification fires)
+
+## 6. Phase 6 — PH market (future)
+
+- [ ] PhilHealth prescription verification API integration
+- [ ] Pharmacy partner refill reminders + delivery
+- [ ] Barangay health center cohort dashboard (multi-patient view in Next.js)
+- [ ] Tagalog / Filipino UI translations (`flutter_localizations`)
+- [ ] Offline-first queue: local SQLite cache, background sync to Supabase when connectivity returns
+- [ ] Freemium gate: free tier = reminders only; premium = verification + monitor dashboard
+
+---
 
 ## 7. Ops / housekeeping
 
-- [ ] `.env` is in `.gitignore` — never commit real keys
-- [ ] Storage TTL Edge Function — purge verification images > 30 days
-- [ ] Crashlytics or Sentry hook in `main.dart`
-- [ ] App icon + splash branding (replace Flutter default)
-- [ ] Privacy policy page (required for Play Store + camera perm)
+- [ ] `.env` + `nextjs-dashboard/.env.local` in `.gitignore` — never commit real keys ✅
+- [ ] Rotate Supabase service_role if it ever leaks
+- [ ] Storage TTL Edge Function deployed (Phase 5)
+- [ ] Crashlytics dashboards alarmed (Phase 5)
+- [ ] App icon + splash branding (Phase 5)
+- [ ] Privacy policy + Terms of Service URLs in Play Store listing
 
 ## 8. Known issues / debt
 
-- 1 pub package flagged discontinued — run `flutter pub outdated` and swap before Play Store submit
-- `flutter_overlay_window` v0.4.5 — confirm still maintained at Phase 3 start; alternative: `system_alert_window`
-- Timezone hardcoded `Asia/Manila` in `notification_service.dart` — read from `users.timezone` once profile is wired
+- [ ] 1 pub package flagged discontinued — run `flutter pub outdated` and swap before Play Store submit
+- [ ] `flutter_overlay_window` v0.4.5 — confirm still maintained; alternative: `system_alert_window`
+- [ ] Timezone hardcoded `Asia/Manila` in `notification_service.dart` — read from `users.timezone` once profile-edit UI lands
+- [ ] `bump_streak` SQL trigger does not handle missed-day reset — add a daily cron job that resets `current_streak` to 0 if `last_verified_date < today - 1 day`
+- [ ] iOS lock = graceful no-op today; Phase 5 modal fallback needed
+- [ ] No retry logic on Supabase Storage upload failure — verification photo may silently drop on flaky network
