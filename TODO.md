@@ -14,6 +14,7 @@ Living checklist. Tick as done. Order = do top → bottom.
 | 4 — Dashboard | ✅ | npm install + Vercel + edge fns | schema.sql ready |
 | 5 — Polish | ✅ code-side | external assets (icon, splash, FCM, Sentry DSN) | iOS modal fallback live |
 | 6 — PH market | ⏳ | future | future |
+| Sec — miss-alert hardening | ✅ code-side | rotate WEBHOOK_SECRET + add header to DB Webhook | constant-time + DB re-fetch |
 
 ---
 
@@ -72,8 +73,13 @@ Living checklist. Tick as done. Order = do top → bottom.
 - [ ] Confirm dashboard live-updates when patient verifies a dose (Supabase Realtime)
 - [ ] Deploy: `vercel --prod` → set the 3 env vars in Vercel project settings
 - [ ] `supabase functions deploy miss-alert`
-- [ ] `supabase secrets set FCM_SERVER_KEY=...` (get from Firebase console)
-- [ ] Add Database Webhook in Supabase: table=compliance_logs, event=UPDATE, condition=`new.status='missed' AND old.status!='missed'`, URL=function URL
+- [ ] `supabase functions deploy daily-rollover`
+- [ ] `supabase functions deploy storage-ttl`
+- [ ] `supabase secrets set FCM_SERVER_KEY=...` (Firebase console → Project settings → Cloud Messaging → Server key)
+- [ ] **Security:** `SECRET=$(openssl rand -hex 32) && supabase secrets set WEBHOOK_SECRET="$SECRET"` — then add HTTP header `x-webhook-secret: $SECRET` to the Database Webhook config (miss-alert returns 401 without it)
+- [ ] Add Database Webhook in Supabase: table=compliance_logs, event=UPDATE, condition=`new.status='missed' AND old.status!='missed'`, URL=function URL, HTTP headers include `x-webhook-secret`
+- [ ] Schedule `daily-rollover` via Supabase cron: `5 0 * * *` (00:05 Asia/Manila)
+- [ ] Schedule `storage-ttl` via Supabase cron: `30 0 * * *` (UTC)
 - [ ] Wire FCM device-token registration in mobile app (Phase 5 — see below)
 
 ---
@@ -114,18 +120,35 @@ Still requires external assets — out of pure code reach:
 
 ## 7. Ops / housekeeping
 
-- [ ] `.env` + `nextjs-dashboard/.env.local` in `.gitignore` — never commit real keys ✅
-- [ ] Rotate Supabase service_role if it ever leaks
+- [x] `.env` + `nextjs-dashboard/.env.local` in `.gitignore` — never commit real keys
+- [ ] Rotate Supabase `service_role` if it ever leaks
+- [ ] Rotate `WEBHOOK_SECRET` every 90 days (or on suspicion of leak) — `supabase secrets set WEBHOOK_SECRET=...` + update Database Webhook header in same dashboard transaction so no requests fail in between
 - [ ] Storage TTL Edge Function deployed (Phase 5)
 - [ ] Crashlytics dashboards alarmed (Phase 5)
 - [ ] App icon + splash branding (Phase 5)
 - [ ] Privacy policy + Terms of Service URLs in Play Store listing
+- [ ] Dependabot / `flutter pub outdated` on a weekly cadence
+- [ ] Branch protection on `main`: require all 4 CI jobs green + 1 review (GitHub UI per CONTRIBUTING.md)
+- [ ] CodeQL or GitHub Advanced Security on the repo (free for public repos)
 
 ## 8. Known issues / debt
 
 - [ ] 1 pub package flagged discontinued — run `flutter pub outdated` and swap before Play Store submit
 - [ ] `flutter_overlay_window` v0.4.5 — confirm still maintained; alternative: `system_alert_window`
 - [ ] Timezone hardcoded `Asia/Manila` in `notification_service.dart` — read from `users.timezone` once profile-edit UI lands
-- [ ] `bump_streak` SQL trigger does not handle missed-day reset — add a daily cron job that resets `current_streak` to 0 if `last_verified_date < today - 1 day`
-- [ ] iOS lock = graceful no-op today; Phase 5 modal fallback needed
+- [x] `bump_streak` SQL trigger does not handle missed-day reset → handled by `daily-rollover` Edge Function (cron-scheduled)
+- [x] iOS lock = graceful no-op today → fixed by `LockGate` widget watching `lockedNotifier`
 - [ ] No retry logic on Supabase Storage upload failure — verification photo may silently drop on flaky network
+- [ ] RLS hardening: `users_update_self` policy lacks `with check`; add `with check (auth.uid() = id and role = 'patient')` before `role` ever gates server-side authz (currently no-op since `role` isn't consulted by any policy)
+- [ ] Add Supabase Logflare / similar tail for `miss-alert` 401s — alert if > N per minute (indicates header misconfig or spray attack)
+
+---
+
+## 9. Security TODO (post-review)
+
+- [x] `miss-alert` shared-secret + DB re-fetch (commit `0756365`)
+- [ ] Deploy: rotate `WEBHOOK_SECRET` + update Database Webhook header (see §5)
+- [ ] Add automated `deno test` smoke step locally before next push (`brew install deno && deno test supabase/functions/_tests/`)
+- [ ] Run `/security-review` again before each tagged release
+- [ ] Threat-model the FCM push body: ensure `patient.name` rendered server-side cannot contain injection payload that breaks Android notification rendering (extremely low risk, but worth a 30-min audit)
+- [ ] Consider adding `signed_url_expires_at` to compliance_logs so dashboard can re-sign expired photo URLs server-side instead of failing silently
