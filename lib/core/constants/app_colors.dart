@@ -43,4 +43,25 @@ class AppColors {
         surfaceContainerHighest: surfaceContainer,
         outline: outline,
       );
+
+  // Dark theme tokens.
+  static const Color darkSurface = Color(0xFF161013);
+  static const Color darkSurfaceContainer = Color(0xFF1F1719);
+  static const Color darkOnSurface = Color(0xFFF7EEED);
+
+  static ColorScheme get darkScheme => const ColorScheme(
+        brightness: Brightness.dark,
+        primary: accent,
+        onPrimary: Color(0xFF1A0708),
+        secondary: Color(0xFF6FCB89),
+        onSecondary: Color(0xFF06180D),
+        tertiary: Color(0xFFFFB4AB),
+        onTertiary: Color(0xFF1A0708),
+        error: Color(0xFFFFB4AB),
+        onError: Color(0xFF1A0708),
+        surface: darkSurface,
+        onSurface: darkOnSurface,
+        surfaceContainerHighest: darkSurfaceContainer,
+        outline: Color(0xFF55474A),
+      );
 }

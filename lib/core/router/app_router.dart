@@ -1,8 +1,8 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/login_screen.dart';
+import '../../features/credits/credits_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/lock/lock_screen.dart';
@@ -10,6 +10,7 @@ import '../../features/onboarding/onboarding_accessibility_screen.dart';
 import '../../features/onboarding/onboarding_medication_screen.dart';
 import '../../features/onboarding/onboarding_monitor_screen.dart';
 import '../../features/onboarding/onboarding_welcome_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/verification/verification_screen.dart';
 import '../../shared/widgets/medbuddy_scaffold.dart';
@@ -26,6 +27,7 @@ class AppRoute {
   static const profile = 'profile';
   static const verification = 'verification';
   static const lock = 'lock';
+  static const credits = 'credits';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -81,7 +83,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: AppRoute.profile,
             path: '/profile',
             pageBuilder: (_, _) =>
-                const NoTransitionPage(child: _ProfilePlaceholder()),
+                const NoTransitionPage(child: ProfileScreen()),
           ),
         ],
       ),
@@ -95,14 +97,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/lock',
         builder: (_, _) => const LockScreen(),
       ),
+      GoRoute(
+        name: AppRoute.credits,
+        path: '/credits',
+        builder: (_, _) => const CreditsScreen(),
+      ),
     ],
   );
 });
-
-class _ProfilePlaceholder extends StatelessWidget {
-  const _ProfilePlaceholder();
-
-  @override
-  Widget build(BuildContext context) =>
-      const Center(child: Text('Profile (coming soon)'));
-}

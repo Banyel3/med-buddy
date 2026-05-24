@@ -9,6 +9,8 @@ import 'core/notifications/background_scheduler.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_client.dart';
+import 'features/lock/lock_gate.dart';
+import 'features/profile/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,10 +35,12 @@ class MedBuddyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
       title: 'MedBuddy',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      themeMode: themeMode,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: AppColors.lightScheme,
@@ -56,8 +60,30 @@ class MedBuddyApp extends ConsumerWidget {
           ),
         ),
       ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: AppColors.darkScheme,
+        scaffoldBackgroundColor: AppColors.darkSurface,
+        textTheme: AppTextStyles.textTheme.apply(
+          bodyColor: AppColors.darkOnSurface,
+          displayColor: AppColors.darkOnSurface,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.darkSurface,
+          foregroundColor: AppColors.darkOnSurface,
+          elevation: 0,
+          centerTitle: false,
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.darkSurfaceContainer,
+          border: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF55474A)),
+          ),
+        ),
+      ),
       builder: (context, child) => ResponsiveBreakpoints.builder(
-        child: child!,
+        child: LockGate(child: child!),
         breakpoints: const [
           Breakpoint(start: 0, end: 599, name: MOBILE),
           Breakpoint(start: 600, end: 1023, name: TABLET),
