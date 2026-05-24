@@ -7,7 +7,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Medbuddy</string>
+	<string>MedBuddy</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MedBuddy uses your camera to verify each medication dose with a quick face + pill check.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MedBuddy saves verification photos so you and your monitor can see your adherence history.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>MedBuddy saves verification photos to your library.</string>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>MedBuddy reminds you when it is time to take your medication.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
