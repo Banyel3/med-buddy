@@ -61,7 +61,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Accessibility service stub (Phase 3 wires the full lock). -->
+        <!-- Phase 3 lock — accessibility service. -->
         <service
             android:name=".MedBuddyAccessibility"
             android:exported="true"
@@ -73,6 +73,16 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/medbuddy_accessibility_config"/>
+        </service>
+
+        <!-- Phase 3 lock — system-level overlay window host. -->
+        <service
+            android:name=".LockOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="medbuddy_lock_overlay"/>
         </service>
     </application>
     <!-- Required to query activities that can process text, see:

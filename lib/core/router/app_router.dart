@@ -6,6 +6,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/lock/lock_screen.dart';
+import '../../features/onboarding/onboarding_accessibility_screen.dart';
 import '../../features/onboarding/onboarding_medication_screen.dart';
 import '../../features/onboarding/onboarding_monitor_screen.dart';
 import '../../features/onboarding/onboarding_welcome_screen.dart';
@@ -19,6 +20,7 @@ class AppRoute {
   static const onboardingWelcome = 'onboardingWelcome';
   static const onboardingMedication = 'onboardingMedication';
   static const onboardingMonitor = 'onboardingMonitor';
+  static const onboardingAccessibility = 'onboardingAccessibility';
   static const home = 'home';
   static const history = 'history';
   static const profile = 'profile';
@@ -54,6 +56,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoute.onboardingMonitor,
         path: '/onboarding/monitor',
         builder: (_, _) => const OnboardingMonitorScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.onboardingAccessibility,
+        path: '/onboarding/accessibility',
+        builder: (_, _) => const OnboardingAccessibilityScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) =>

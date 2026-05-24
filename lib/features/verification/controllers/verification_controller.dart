@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/compliance_log_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/lock_provider.dart';
 import '../../../shared/providers/medication_provider.dart';
 import '../../../shared/providers/supabase_providers.dart';
 import '../services/face_detection_service.dart';
@@ -115,6 +116,8 @@ class VerificationController extends StateNotifier<VerificationState> {
           pillConfidence: result.pillConfidence,
         ),
       );
+      // Release the lock if active (Phase 3).
+      await _ref.read(lockServiceProvider).deactivate();
       state = state.copyWith(submitting: false);
       return true;
     } catch (e, st) {

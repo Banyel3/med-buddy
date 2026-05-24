@@ -78,13 +78,15 @@ class OnboardingMonitorScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   PrimaryButton(
-                    label: 'Finish setup',
-                    icon: Icons.check_rounded,
-                    onPressed: () => context.goNamed(AppRoute.home),
+                    label: 'Continue',
+                    icon: Icons.arrow_forward_rounded,
+                    onPressed: () =>
+                        context.goNamed(AppRoute.onboardingAccessibility),
                   ),
                   const SizedBox(height: AppDimensions.space12),
                   TextButton(
-                    onPressed: () => context.goNamed(AppRoute.home),
+                    onPressed: () =>
+                        context.goNamed(AppRoute.onboardingAccessibility),
                     child: const Text('Skip for now'),
                   ),
                 ],

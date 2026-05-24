@@ -3,6 +3,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../features/lock/services/accessibility_lock_service.dart';
+
 /// Wraps flutter_local_notifications + tz scheduling.
 /// Default schedule = 12:30 PM Asia/Manila (PRD §3.1, §4.2).
 class NotificationService {
@@ -32,6 +34,7 @@ class NotificationService {
     );
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
     await _plugin
@@ -66,6 +69,13 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       );
 
+  static void _onNotificationResponse(NotificationResponse response) {
+    if (response.payload == 'lock-activate') {
+      // Fire-and-forget — lock service is idempotent.
+      AccessibilityLockService.instance.activate();
+    }
+  }
+
   Future<void> scheduleDailyReminder({
     TimeOfDay time = const TimeOfDay(hour: 12, minute: 30),
   }) async {
@@ -97,15 +107,21 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       lockNotificationId,
-      'Locking in 30 min ⏳',
-      'Verify your dose to keep your phone unlocked.',
+      'Phone locking now 🔒',
+      'Verify your dose to unlock your phone.',
       _nextInstanceOf(_addMinutes(time, 30)),
-      _details,
+      _details.copyWithPayload('lock-activate'),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'lock-activate',
     );
+  }
+
+  /// Arms the lock immediately — used by background trigger at T+30.
+  Future<void> armLockNow() async {
+    await AccessibilityLockService.instance.activate();
   }
 
   Future<void> cancelAll() => _plugin.cancelAll();
@@ -130,4 +146,8 @@ class NotificationService {
     final total = t.hour * 60 + t.minute + minutes;
     return TimeOfDay(hour: (total ~/ 60) % 24, minute: total % 60);
   }
+}
+
+extension on NotificationDetails {
+  NotificationDetails copyWithPayload(String _) => this;
 }
