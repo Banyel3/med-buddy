@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MedBuddy</string>
+    <string name="medbuddy_accessibility_summary">Locks your phone until you verify your medication.</string>
+    <string name="medbuddy_accessibility_desc">MedBuddy uses Accessibility Service to display a system-wide lock overlay after a missed reminder. The lock dismisses once you verify your dose. MedBuddy never reads other apps content.</string>
+</resources>
