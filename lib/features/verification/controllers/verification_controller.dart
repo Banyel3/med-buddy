@@ -59,11 +59,16 @@ class VerificationState {
 }
 
 class VerificationController extends StateNotifier<VerificationState> {
-  VerificationController(this._ref) : super(const VerificationState());
+  VerificationController(this._ref, {
+    FaceDetectionService? face,
+    PillDetectionService? pill,
+  })  : _face = face ?? FaceDetectionService(),
+        _pill = pill ?? PillDetectionService(),
+        super(const VerificationState());
 
   final Ref _ref;
-  final _face = FaceDetectionService();
-  final _pill = PillDetectionService();
+  final FaceDetectionService _face;
+  final PillDetectionService _pill;
 
   Future<void> analyzeCapture(String filePath) async {
     state = state.copyWith(
@@ -168,6 +173,16 @@ class VerificationController extends StateNotifier<VerificationState> {
   }
 }
 
+final faceDetectionServiceProvider =
+    Provider<FaceDetectionService>((ref) => FaceDetectionService());
+
+final pillDetectionServiceProvider =
+    Provider<PillDetectionService>((ref) => PillDetectionService());
+
 final verificationControllerProvider =
     StateNotifierProvider.autoDispose<VerificationController, VerificationState>(
-        (ref) => VerificationController(ref));
+        (ref) => VerificationController(
+              ref,
+              face: ref.read(faceDetectionServiceProvider),
+              pill: ref.read(pillDetectionServiceProvider),
+            ));

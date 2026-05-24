@@ -11,6 +11,10 @@
 // ---------------------------------------------------------------
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import {
+  nextLongestStreak,
+  shouldResetStreak,
+} from '../_shared/streak_math.ts';
 
 Deno.serve(async () => {
   const supabase = createClient(
@@ -39,20 +43,28 @@ Deno.serve(async () => {
     .lt('last_verified_date', ydKey);
 
   if (stale && stale.length > 0) {
+    const now = new Date();
     await Promise.all(
-      stale.map((s) =>
-        supabase
-          .from('streaks')
-          .update({
-            current_streak: 0,
-            longest_streak: Math.max(
-              s.longest_streak ?? 0,
-              s.current_streak ?? 0,
-            ),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', s.id),
-      ),
+      stale
+        .filter((s) =>
+          shouldResetStreak(
+            s.last_verified_date ? new Date(s.last_verified_date) : null,
+            now,
+          ),
+        )
+        .map((s) =>
+          supabase
+            .from('streaks')
+            .update({
+              current_streak: 0,
+              longest_streak: nextLongestStreak(
+                s.current_streak ?? 0,
+                s.longest_streak ?? 0,
+              ),
+              updated_at: now.toISOString(),
+            })
+            .eq('id', s.id),
+        ),
     );
   }
 
