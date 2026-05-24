@@ -51,6 +51,28 @@ deno test --allow-env --allow-net functions/_tests/
 | `dashboard` | `tsc --noEmit`, `next lint`, `vitest run`, `next build` |
 | `edge-functions` | `deno test` on `supabase/functions/_tests/` |
 
+## Supabase Edge Function secrets
+
+`miss-alert` requires a shared secret to be set on both the function env
+and the Database Webhook config. Without it, the function returns 401.
+
+```bash
+# Generate a strong secret once:
+SECRET=$(openssl rand -hex 32)
+
+# Set on the function env:
+supabase secrets set WEBHOOK_SECRET="$SECRET"
+supabase secrets set FCM_SERVER_KEY=<firebase-server-key>
+
+# Then in Supabase Dashboard → Database → Webhooks → Edit miss-alert:
+#   add HTTP header `x-webhook-secret: <SECRET>`
+```
+
+The function does NOT trust `record.user_id` / `record.status` from the
+webhook payload — it re-reads the `compliance_logs` row by `record.id`
+and acts only on the database state. This prevents payload spoofing
+even if the secret leaks.
+
 ## Branch protection (do this once in the GitHub UI)
 
 Settings → Branches → Add rule for `main`:
