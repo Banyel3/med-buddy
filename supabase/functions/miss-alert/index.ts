@@ -35,8 +35,8 @@
 //   Headers:   x-webhook-secret: <same value as WEBHOOK_SECRET>
 // ---------------------------------------------------------------
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import { checkWebhookSecret } from '../_shared/security.ts';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { checkWebhookSecret } from "../_shared/security.ts";
 
 interface MissedPayload {
   record?: { id?: string };
@@ -46,11 +46,11 @@ interface MissedPayload {
 /// authoritative DB row's status is exactly `'missed'`. Exported so
 /// `_tests/miss_alert_test.ts` exercises the actual production logic.
 export const shouldFireMissAlert = (row: { status: string }): boolean =>
-  row.status === 'missed';
+  row.status === "missed";
 
 Deno.serve(async (req) => {
   // --- Authn: shared-secret header (constant-time) ---
-  const auth = checkWebhookSecret(req, Deno.env.get('WEBHOOK_SECRET'));
+  const auth = checkWebhookSecret(req, Deno.env.get("WEBHOOK_SECRET"));
   if (!auth.ok) {
     return new Response(`unauthorized: ${auth.reason}`, { status: 401 });
   }
@@ -58,88 +58,88 @@ Deno.serve(async (req) => {
   try {
     const body: MissedPayload = await req.json().catch(() => ({}));
     const recordId = body.record?.id;
-    if (!recordId || typeof recordId !== 'string') {
-      return new Response('bad request: record.id required', { status: 400 });
+    if (!recordId || typeof recordId !== "string") {
+      return new Response("bad request: record.id required", { status: 400 });
     }
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     // --- Authz: re-fetch by id, trust DB state only ---
     const { data: log, error: logErr } = await supabase
-      .from('compliance_logs')
-      .select('id, user_id, date, status')
-      .eq('id', recordId)
+      .from("compliance_logs")
+      .select("id, user_id, date, status")
+      .eq("id", recordId)
       .maybeSingle();
     if (logErr) {
-      console.error('miss-alert: log fetch failed', logErr);
-      return new Response('db error', { status: 500 });
+      console.error("miss-alert: log fetch failed", logErr);
+      return new Response("db error", { status: 500 });
     }
     if (!log) {
-      return new Response('not found', { status: 404 });
+      return new Response("not found", { status: 404 });
     }
     if (!shouldFireMissAlert(log)) {
       // Webhook fired in a race / row got fixed. No-op.
-      return new Response('ignored: status not missed', { status: 200 });
+      return new Response("ignored: status not missed", { status: 200 });
     }
 
     const userId: string = log.user_id;
 
     // Independent reads — fan out in parallel.
     const [patientRes, linksRes] = await Promise.all([
-      supabase.from('users').select('name').eq('id', userId).maybeSingle(),
+      supabase.from("users").select("name").eq("id", userId).maybeSingle(),
       supabase
-        .from('monitor_links')
-        .select('monitor_id')
-        .eq('patient_id', userId),
+        .from("monitor_links")
+        .select("monitor_id")
+        .eq("patient_id", userId),
     ]);
     const patient = patientRes.data;
     const links = linksRes.data;
 
     if (!links || links.length === 0) {
-      return new Response('no monitors', { status: 200 });
+      return new Response("no monitors", { status: 200 });
     }
 
     const monitorIds = links.map((l) => l.monitor_id);
     const { data: tokens } = await supabase
-      .from('device_tokens')
-      .select('token, platform')
-      .in('user_id', monitorIds);
+      .from("device_tokens")
+      .select("token, platform")
+      .in("user_id", monitorIds);
 
     if (!tokens || tokens.length === 0) {
-      return new Response('no tokens', { status: 200 });
+      return new Response("no tokens", { status: 200 });
     }
 
-    const fcmKey = Deno.env.get('FCM_SERVER_KEY');
+    const fcmKey = Deno.env.get("FCM_SERVER_KEY");
     if (!fcmKey) {
-      return new Response('FCM_SERVER_KEY not configured', { status: 500 });
+      return new Response("FCM_SERVER_KEY not configured", { status: 500 });
     }
 
-    const title = `${patient?.name ?? 'Your patient'} missed a dose`;
+    const title = `${patient?.name ?? "Your patient"} missed a dose`;
     const message = `Date: ${log.date}. Check the dashboard.`;
 
     await Promise.all(
       tokens.map((t) =>
-        fetch('https://fcm.googleapis.com/fcm/send', {
-          method: 'POST',
+        fetch("https://fcm.googleapis.com/fcm/send", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `key=${fcmKey}`,
           },
           body: JSON.stringify({
             to: t.token,
             notification: { title, body: message },
-            data: { logId: log.id, kind: 'miss-alert' },
+            data: { logId: log.id, kind: "miss-alert" },
           }),
-        }),
+        })
       ),
     );
 
-    return new Response('ok', { status: 200 });
+    return new Response("ok", { status: 200 });
   } catch (e) {
-    console.error('miss-alert error', e);
-    return new Response('error', { status: 500 });
+    console.error("miss-alert error", e);
+    return new Response("error", { status: 500 });
   }
 });

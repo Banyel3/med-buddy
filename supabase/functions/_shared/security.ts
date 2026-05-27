@@ -24,11 +24,11 @@ export function checkWebhookSecret(
   envSecret: string | undefined,
 ): { ok: boolean; reason?: string } {
   if (!envSecret || envSecret.length < 16) {
-    return { ok: false, reason: 'WEBHOOK_SECRET not configured' };
+    return { ok: false, reason: "WEBHOOK_SECRET not configured" };
   }
-  const provided = req.headers.get('x-webhook-secret') ?? '';
+  const provided = req.headers.get("x-webhook-secret") ?? "";
   if (!timingSafeEqual(provided, envSecret)) {
-    return { ok: false, reason: 'invalid webhook secret' };
+    return { ok: false, reason: "invalid webhook secret" };
   }
   return { ok: true };
 }

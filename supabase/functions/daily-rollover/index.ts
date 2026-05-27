@@ -10,33 +10,33 @@
 //   `0 0 * * *` Asia/Manila → invokes this function URL.
 // ---------------------------------------------------------------
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import { checkWebhookSecret } from '../_shared/security.ts';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { checkWebhookSecret } from "../_shared/security.ts";
 import {
   nextLongestStreak,
   shouldResetStreak,
-} from '../_shared/streak_math.ts';
+} from "../_shared/streak_math.ts";
 
 Deno.serve(async (req) => {
-  const auth = checkWebhookSecret(req, Deno.env.get('WEBHOOK_SECRET'));
+  const auth = checkWebhookSecret(req, Deno.env.get("WEBHOOK_SECRET"));
   if (!auth.ok) {
     return new Response(`unauthorized: ${auth.reason}`, { status: 401 });
   }
 
   const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
   const today = new Date().toISOString().slice(0, 10);
 
   // 1) Mark expired pending logs as missed.
   const { error: missErr } = await supabase
-    .from('compliance_logs')
-    .update({ status: 'missed' })
-    .eq('status', 'pending')
-    .lt('date', today);
-  if (missErr) console.error('miss-mark failed', missErr);
+    .from("compliance_logs")
+    .update({ status: "missed" })
+    .eq("status", "pending")
+    .lt("date", today);
+  if (missErr) console.error("miss-mark failed", missErr);
 
   // 2) Reset broken streaks.
   const yesterday = new Date();
@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
   const ydKey = yesterday.toISOString().slice(0, 10);
 
   const { data: stale } = await supabase
-    .from('streaks')
-    .select('id, user_id, last_verified_date, longest_streak, current_streak')
-    .lt('last_verified_date', ydKey);
+    .from("streaks")
+    .select("id, user_id, last_verified_date, longest_streak, current_streak")
+    .lt("last_verified_date", ydKey);
 
   if (stale && stale.length > 0) {
     const now = new Date();
@@ -56,11 +56,11 @@ Deno.serve(async (req) => {
           shouldResetStreak(
             s.last_verified_date ? new Date(s.last_verified_date) : null,
             now,
-          ),
+          )
         )
         .map((s) =>
           supabase
-            .from('streaks')
+            .from("streaks")
             .update({
               current_streak: 0,
               longest_streak: nextLongestStreak(
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
               ),
               updated_at: now.toISOString(),
             })
-            .eq('id', s.id),
+            .eq("id", s.id)
         ),
     );
   }
@@ -80,6 +80,6 @@ Deno.serve(async (req) => {
       missed_marked_for_dates_before: today,
       streaks_reset: stale?.length ?? 0,
     }),
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: { "Content-Type": "application/json" } },
   );
 });
