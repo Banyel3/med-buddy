@@ -421,6 +421,58 @@ psql_db -c "select status_code, content::text from net._http_response order by c
 
 ---
 
+## 11. Lock mode (hard vs. soft)
+
+Switching modes — three layers, highest wins:
+
+```
+1. Build flag         flutter run --dart-define=MEDBUDDY_LOCK_MODE=soft
+2. .env (mobile root) MEDBUDDY_LOCK_MODE=hard
+3. User toggle        Profile → Lock style (only enabled when 1 and 2 unset)
+```
+
+Dev workflow: pin via build flag on your dev branch, ship prod builds with
+`MEDBUDDY_LOCK_MODE` unset so end users can change it themselves.
+
+```bash
+# Force soft for QA builds
+flutter run -d emulator-5554 --dart-define=MEDBUDDY_LOCK_MODE=soft
+
+# Force hard for production smoke
+flutter build apk --release --dart-define=MEDBUDDY_LOCK_MODE=hard
+
+# Per-machine override without rebuild
+echo 'MEDBUDDY_LOCK_MODE=soft' >> .env
+```
+
+When env-pinned, the Profile Lock-style SegmentedButton disables with the
+hint "Pinned by build flag / .env".
+
+Lock alarm test (works on physical device only — emulator can't render
+TYPE_ACCESSIBILITY_OVERLAY reliably):
+
+```bash
+# 1. On device: Settings → Accessibility → MedBuddy → On
+# 2. Settings → Apps → MedBuddy → Display over other apps → Allow
+# 3. Settings → Apps → MedBuddy → Alarms & reminders → Allow (A12+)
+# 4. In app: add a med scheduled 2 minutes in the future
+# 5. Background the app. Wait 32 minutes (med_time + 30).
+# 6. Overlay should auto-appear, BACK / HOME bounce back.
+# 7. In SOFT mode: tap "Skip for now (tap 5×)" five times → overlay clears.
+# 8. In HARD mode: only completing verification clears it.
+```
+
+Recovery if lock gets stuck (no verification possible):
+
+| Path | Steps |
+|---|---|
+| Settings | Notification shade → Settings → Accessibility → MedBuddy → Off |
+| ADB force-stop | `adb shell am force-stop com.medbuddy.medbuddy` |
+| ADB uninstall | `adb shell pm uninstall com.medbuddy.medbuddy` |
+| Safe Mode | Power button → long-press "Power Off" → Reboot to safe mode |
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |

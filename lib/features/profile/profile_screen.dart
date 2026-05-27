@@ -25,6 +25,8 @@ class ProfileScreen extends ConsumerWidget {
     final meds = ref.watch(medicationsProvider).valueOrNull ?? const [];
     final themeMode = ref.watch(themeModeProvider);
     final lockMode = ref.watch(lockModeProvider);
+    final lockEnvPinned =
+        ref.read(lockModeProvider.notifier).envPinned;
     final linkCode = supaUser != null
         ? 'MB-${supaUser.id.substring(0, 6).toUpperCase()}'
         : 'MB-XXXXXX';
@@ -187,15 +189,19 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ],
                           selected: {lockMode},
-                          onSelectionChanged: (s) => ref
-                              .read(lockModeProvider.notifier)
-                              .set(s.first),
+                          onSelectionChanged: lockEnvPinned
+                              ? null
+                              : (s) => ref
+                                  .read(lockModeProvider.notifier)
+                                  .set(s.first),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          lockMode == LockMode.hard
-                              ? 'Phone locks until you verify. Most effective.'
-                              : 'Phone locks but a "Skip" button can dismiss it after 5 taps.',
+                          lockEnvPinned
+                              ? 'Pinned by build flag / .env (MEDBUDDY_LOCK_MODE). Unset to enable this toggle.'
+                              : lockMode == LockMode.hard
+                                  ? 'Phone locks until you verify. Most effective.'
+                                  : 'Phone locks but a "Skip" button can dismiss it after 5 taps.',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
