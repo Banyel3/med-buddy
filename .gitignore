@@ -25,6 +25,10 @@ build/
 # Supabase CLI link state (per-machine)
 supabase/.temp/
 
+# Node tooling (Vitest .vite cache from running tests at repo root)
+node_modules/
+nextjs-dashboard/.next/
+
 # OS
 .DS_Store
 Thumbs.db

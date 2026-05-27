@@ -4,6 +4,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../features/lock/services/accessibility_lock_service.dart';
+import '../../shared/models/medication_model.dart';
 import 'schedule_math.dart';
 
 /// Wraps flutter_local_notifications + tz scheduling.
@@ -79,11 +80,12 @@ class NotificationService {
 
   Future<void> scheduleDailyReminder({
     TimeOfDay time = const TimeOfDay(hour: 12, minute: 30),
+    String medName = 'your medication',
   }) async {
     await init();
     await _plugin.zonedSchedule(
       reminderNotificationId,
-      'Hey! Time for your iron med + creatine 💊🍊',
+      'Time for $medName 💊',
       'Tap to verify and keep your streak going.',
       ScheduleMath.nextInstanceOf(time, tz.local),
       _details,
@@ -96,7 +98,7 @@ class NotificationService {
     await _plugin.zonedSchedule(
       escalationNotificationId,
       'Still waiting on you 👀',
-      'Your calamansi juice is ready!',
+      "Take $medName when you're ready.",
       ScheduleMath.nextInstanceOf(
           ScheduleMath.addMinutes(time, 15), tz.local),
       _details,
@@ -119,6 +121,60 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'lock-activate',
     );
+  }
+
+  /// Cancels every reminder and re-schedules one set per active medication.
+  /// Stable per-med IDs via `medication.id.hashCode` so re-runs replace rather
+  /// than duplicate. Three notifications per med: reminder, T+15 escalation,
+  /// T+30 lock.
+  Future<void> scheduleAllReminders(List<MedicationModel> meds) async {
+    await init();
+    await _plugin.cancelAll();
+    for (final med in meds.where((m) => m.active)) {
+      final base = med.id.hashCode & 0x7FFFFFFF; // positive 31-bit
+      final remindAt = ScheduleMath.nextInstanceOf(med.scheduleTime, tz.local);
+      final escalateAt = ScheduleMath.nextInstanceOf(
+          ScheduleMath.addMinutes(med.scheduleTime, 15), tz.local);
+      final lockAt = ScheduleMath.nextInstanceOf(
+          ScheduleMath.addMinutes(med.scheduleTime, 30), tz.local);
+
+      await _plugin.zonedSchedule(
+        base + 0,
+        'Time for ${med.name} 💊',
+        'Tap to verify and keep your streak going.',
+        remindAt,
+        _details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+
+      await _plugin.zonedSchedule(
+        base + 1,
+        'Still waiting on you 👀',
+        "Take ${med.name} when you're ready.",
+        escalateAt,
+        _details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+
+      await _plugin.zonedSchedule(
+        base + 2,
+        'Phone locking now 🔒',
+        'Verify your dose to unlock your phone.',
+        lockAt,
+        _details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'lock-activate',
+      );
+    }
   }
 
   /// Arms the lock immediately — used by background trigger at T+30.

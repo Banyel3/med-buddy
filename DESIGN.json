@@ -1,0 +1,434 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-28T00:00:00Z",
+  "title": "Design System: MedBuddy",
+  "extensions": {
+    "colorMeta": {
+      "patient-primary": {
+        "role": "primary",
+        "displayName": "Petal Rose",
+        "canonical": "oklch(0.62 0.18 350)",
+        "tonalRamp": [
+          "#3A0F1F",
+          "#5C1A30",
+          "#822444",
+          "#A8345E",
+          "#E04D8C",
+          "#F37BAD",
+          "#FAA9C8",
+          "#FFE0EC"
+        ]
+      },
+      "patient-accent": {
+        "role": "tertiary",
+        "displayName": "Blush",
+        "canonical": "oklch(0.85 0.10 355)",
+        "tonalRamp": [
+          "#3F1C26",
+          "#5F2A37",
+          "#85404F",
+          "#B36677",
+          "#E792AC",
+          "#FFB6CB",
+          "#FFD2DF",
+          "#FFE9F0"
+        ]
+      },
+      "patient-secondary": {
+        "role": "secondary",
+        "displayName": "Verified Sage (Patient)",
+        "canonical": "oklch(0.74 0.10 145)",
+        "tonalRamp": [
+          "#0E2614",
+          "#1B3D24",
+          "#2B5938",
+          "#447B52",
+          "#5FA174",
+          "#6CB57E",
+          "#A4D3AF",
+          "#D8EFDB"
+        ]
+      },
+      "patient-surface": {
+        "role": "neutral",
+        "displayName": "Petal White",
+        "canonical": "oklch(0.985 0.006 350)",
+        "tonalRamp": [
+          "#1B1015",
+          "#2A171F",
+          "#3D2530",
+          "#5C3947",
+          "#825766",
+          "#B98998",
+          "#E8CFD8",
+          "#FFF7FA"
+        ]
+      },
+      "patient-surface-container": {
+        "role": "neutral",
+        "displayName": "Petal Cushion",
+        "canonical": "oklch(0.94 0.012 350)",
+        "tonalRamp": [
+          "#1B1015",
+          "#2A171F",
+          "#3D2530",
+          "#5C3947",
+          "#825766",
+          "#B98998",
+          "#E8CFD8",
+          "#F7E9EE"
+        ]
+      },
+      "patient-ink": {
+        "role": "neutral",
+        "displayName": "Petal Ink",
+        "canonical": "oklch(0.20 0.02 350)",
+        "tonalRamp": [
+          "#0E0508",
+          "#180A0F",
+          "#2A171F",
+          "#4A2A36",
+          "#704253",
+          "#9F6679",
+          "#CFA3B2",
+          "#F2DDE4"
+        ]
+      },
+      "patient-outline": {
+        "role": "neutral",
+        "displayName": "Petal Outline",
+        "canonical": "oklch(0.85 0.025 350)",
+        "tonalRamp": [
+          "#221319",
+          "#3D2530",
+          "#5C3947",
+          "#825766",
+          "#B98998",
+          "#E8CFD8",
+          "#F4DFE6",
+          "#FCEFF3"
+        ]
+      },
+      "patient-error": {
+        "role": "danger",
+        "displayName": "Petal Alert",
+        "canonical": "oklch(0.55 0.20 5)",
+        "tonalRamp": [
+          "#330810",
+          "#561321",
+          "#7B1F34",
+          "#A02447",
+          "#C6294B",
+          "#E55670",
+          "#F38B9D",
+          "#FBC4CE"
+        ]
+      },
+      "monitor-primary": {
+        "role": "primary",
+        "displayName": "Vesper Violet",
+        "canonical": "oklch(0.55 0.22 295)",
+        "tonalRamp": [
+          "#160A28",
+          "#251348",
+          "#371E6E",
+          "#4B2899",
+          "#6D3FD3",
+          "#9176E0",
+          "#B5A1EC",
+          "#E6DDF6"
+        ]
+      },
+      "monitor-accent": {
+        "role": "tertiary",
+        "displayName": "Lavender",
+        "canonical": "oklch(0.72 0.14 295)",
+        "tonalRamp": [
+          "#1F1535",
+          "#2F234E",
+          "#42306E",
+          "#5D4694",
+          "#7B61BD",
+          "#9B7AE8",
+          "#C2ACF1",
+          "#EBE0FA"
+        ]
+      },
+      "monitor-secondary": {
+        "role": "secondary",
+        "displayName": "Verified Sage (Monitor)",
+        "canonical": "oklch(0.65 0.11 145)",
+        "tonalRamp": [
+          "#0C2412",
+          "#173A20",
+          "#235433",
+          "#34734A",
+          "#479063",
+          "#4FA86A",
+          "#88C7A0",
+          "#D3ECDB"
+        ]
+      },
+      "monitor-surface": {
+        "role": "neutral",
+        "displayName": "Vesper Mist",
+        "canonical": "oklch(0.985 0.006 295)",
+        "tonalRamp": [
+          "#1A1426",
+          "#27203A",
+          "#3A3251",
+          "#574E70",
+          "#7E7596",
+          "#B0A8C7",
+          "#D8CCE9",
+          "#FBF7FE"
+        ]
+      },
+      "monitor-surface-container": {
+        "role": "neutral",
+        "displayName": "Vesper Stone",
+        "canonical": "oklch(0.94 0.014 295)",
+        "tonalRamp": [
+          "#1A1426",
+          "#27203A",
+          "#3A3251",
+          "#574E70",
+          "#7E7596",
+          "#B0A8C7",
+          "#D8CCE9",
+          "#EEE7F7"
+        ]
+      },
+      "monitor-ink": {
+        "role": "neutral",
+        "displayName": "Vesper Ink",
+        "canonical": "oklch(0.18 0.018 295)",
+        "tonalRamp": [
+          "#0B071A",
+          "#130E27",
+          "#1C1626",
+          "#39314A",
+          "#5E5374",
+          "#8C82A4",
+          "#C2B9D6",
+          "#ECE5F4"
+        ]
+      },
+      "monitor-outline": {
+        "role": "neutral",
+        "displayName": "Vesper Outline",
+        "canonical": "oklch(0.85 0.025 295)",
+        "tonalRamp": [
+          "#27203A",
+          "#3A3251",
+          "#574E70",
+          "#7E7596",
+          "#B0A8C7",
+          "#D8CCE9",
+          "#E8DEF1",
+          "#F5EFFA"
+        ]
+      },
+      "monitor-danger": {
+        "role": "danger",
+        "displayName": "Vesper Alert",
+        "canonical": "oklch(0.50 0.21 25)",
+        "tonalRamp": [
+          "#2E0808",
+          "#4F1212",
+          "#741818",
+          "#9A1B1B",
+          "#BA1A1A",
+          "#D74848",
+          "#E97E7E",
+          "#F6BFBF"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Onboarding hero, landing-page hero. Once per page. Tight negative tracking, heavy weight."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Screen titles. 'Profile', 'History', 'Today'."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card headers, section labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraphs, descriptions, longform. Cap reading width at 65-75ch on dashboard."
+      },
+      "body-small": {
+        "displayName": "Body Small",
+        "purpose": "Secondary descriptions, helper text, captions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels, status pills, button text on secondary buttons. 0.3px tracking."
+      },
+      "streak": {
+        "displayName": "Streak Number",
+        "purpose": "The patient app's signature flex moment. Used exactly once per screen, only on the streak hero. Never on monitor."
+      }
+    },
+    "shadows": [
+      {
+        "name": "primary-cta-patient",
+        "value": "0 8px 18px rgba(224, 77, 140, 0.30)",
+        "purpose": "Patient PrimaryButton resting shadow. Brand-tinted, elevates the action above the page."
+      },
+      {
+        "name": "primary-cta-monitor",
+        "value": "0 8px 18px rgba(109, 63, 211, 0.28)",
+        "purpose": "Monitor primary CTA resting shadow. Same grammar as patient, retinted to violet."
+      },
+      {
+        "name": "hero-card-dashboard",
+        "value": "0 25px 50px -12px rgba(28, 22, 38, 0.25)",
+        "purpose": "Landing-page hero card on dashboard. First-impression elevation only; never used inside the app."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Button press / tap. Ease-out-quart for snappy feedback."
+      },
+      {
+        "name": "state",
+        "value": "200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Hover tint shift, focus border change."
+      },
+      {
+        "name": "page",
+        "value": "320ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Page transitions, modal entrance. Ease-out-quint."
+      }
+    ],
+    "breakpoints": [
+      { "name": "phone-max", "value": "600px" },
+      { "name": "tablet-min", "value": "600px" },
+      { "name": "tablet-max", "value": "1024px" },
+      { "name": "desktop-min", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Patient)",
+      "kind": "button",
+      "refersTo": "button-primary-patient",
+      "description": "Patient app primary CTA. Coral-blush gradient, pill radius, brand-tinted shadow at rest.",
+      "html": "<button class=\"ds-btn-primary-patient\">Verify dose</button>",
+      "css": ".ds-btn-primary-patient { background: linear-gradient(135deg, #FFB6CB 0%, #E04D8C 100%); color: #FFFFFF; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; padding: 0 24px; height: 56px; border: none; border-radius: 9999px; box-shadow: 0 8px 18px rgba(224, 77, 140, 0.30); cursor: pointer; transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary-patient:hover { box-shadow: 0 10px 22px rgba(224, 77, 140, 0.36); } .ds-btn-primary-patient:active { transform: scale(0.98); } .ds-btn-primary-patient:focus-visible { outline: 2px solid #E04D8C; outline-offset: 3px; }"
+    },
+    {
+      "name": "Primary Button (Monitor)",
+      "kind": "button",
+      "refersTo": "button-primary-monitor",
+      "description": "Monitor dashboard primary CTA. Lavender-violet gradient, pill radius.",
+      "html": "<button class=\"ds-btn-primary-monitor\">Link patient</button>",
+      "css": ".ds-btn-primary-monitor { background: linear-gradient(135deg, #9B7AE8 0%, #6D3FD3 100%); color: #FFFFFF; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.2px; padding: 12px 28px; border: none; border-radius: 9999px; box-shadow: 0 8px 18px rgba(109, 63, 211, 0.28); cursor: pointer; transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary-monitor:hover { box-shadow: 0 10px 22px rgba(109, 63, 211, 0.34); } .ds-btn-primary-monitor:active { transform: scale(0.98); } .ds-btn-primary-monitor:focus-visible { outline: 2px solid #6D3FD3; outline-offset: 3px; }"
+    },
+    {
+      "name": "Outlined Button (Monitor)",
+      "kind": "button",
+      "refersTo": "button-primary-monitor",
+      "description": "Secondary action on monitor surfaces. Used for sign-up CTA on landing page.",
+      "html": "<button class=\"ds-btn-outlined-monitor\">Sign up to monitor</button>",
+      "css": ".ds-btn-outlined-monitor { background: transparent; color: #6D3FD3; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; padding: 11px 28px; border: 2px solid #6D3FD3; border-radius: 9999px; cursor: pointer; transition: background 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-outlined-monitor:hover { background: rgba(109, 63, 211, 0.05); } .ds-btn-outlined-monitor:focus-visible { outline: 2px solid #6D3FD3; outline-offset: 3px; }"
+    },
+    {
+      "name": "Card (Patient)",
+      "kind": "card",
+      "refersTo": "card-patient",
+      "description": "Patient surface container. Cushion fill, generous radius, no shadow.",
+      "html": "<div class=\"ds-card-patient\"><div class=\"ds-card-patient-title\">Today's dose</div><div class=\"ds-card-patient-body\">Vitamin D, 9:00 AM</div></div>",
+      "css": ".ds-card-patient { background: #F7E9EE; border-radius: 24px; padding: 20px; color: #2A171F; font-family: 'Be Vietnam Pro', system-ui, sans-serif; } .ds-card-patient-title { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; } .ds-card-patient-body { font-size: 14px; font-weight: 400; line-height: 1.45; opacity: 0.78; }"
+    },
+    {
+      "name": "Card (Monitor)",
+      "kind": "card",
+      "refersTo": "card-monitor",
+      "description": "Monitor dashboard card. White on lavender-mist, larger radius.",
+      "html": "<div class=\"ds-card-monitor\"><div class=\"ds-card-monitor-label\">VERIFIED TODAY</div><div class=\"ds-card-monitor-value\">9:14 AM</div></div>",
+      "css": ".ds-card-monitor { background: #FFFFFF; border-radius: 32px; padding: 24px; color: #1C1626; font-family: 'Be Vietnam Pro', system-ui, sans-serif; } .ds-card-monitor-label { font-size: 11px; font-weight: 600; letter-spacing: 0.6px; color: #6D3FD3; margin-bottom: 8px; text-transform: uppercase; } .ds-card-monitor-value { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.3px; }"
+    },
+    {
+      "name": "Input (Monitor)",
+      "kind": "input",
+      "refersTo": "input-monitor",
+      "description": "Monitor form field. Mono-friendly for code-paste contexts.",
+      "html": "<input class=\"ds-input-monitor\" placeholder=\"MB-XXXXXX  or  full UUID\" />",
+      "css": ".ds-input-monitor { width: 100%; background: #EEE7F7; color: #1C1626; font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 14px; padding: 12px 16px; border: 1px solid transparent; border-radius: 16px; outline: none; transition: border-color 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-input-monitor::placeholder { color: #1C1626; opacity: 0.55; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; } .ds-input-monitor:focus { border-color: #6D3FD3; }"
+    },
+    {
+      "name": "Status Chip — Verified",
+      "kind": "chip",
+      "refersTo": "card-monitor",
+      "description": "Verified state pill. Sage fill, sage text, checkmark.",
+      "html": "<span class=\"ds-chip-verified\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg>Verified</span>",
+      "css": ".ds-chip-verified { display: inline-flex; align-items: center; gap: 6px; background: #D8EFDB; color: #2B5938; font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 9999px; letter-spacing: 0.2px; }"
+    },
+    {
+      "name": "Status Chip — Missed",
+      "kind": "chip",
+      "refersTo": "card-monitor",
+      "description": "Missed-dose state pill. Strongest contrast, alert iconography.",
+      "html": "<span class=\"ds-chip-missed\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg>Missed</span>",
+      "css": ".ds-chip-missed { display: inline-flex; align-items: center; gap: 6px; background: #BA1A1A; color: #FFFFFF; font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 9999px; letter-spacing: 0.2px; }"
+    },
+    {
+      "name": "Streak Hero (Patient)",
+      "kind": "custom",
+      "refersTo": "card-patient",
+      "description": "Patient home marquee. Gradient surface, 88px streak number, no decoration.",
+      "html": "<div class=\"ds-streak-hero\"><div class=\"ds-streak-number\">7</div><div class=\"ds-streak-label\">Day streak</div></div>",
+      "css": ".ds-streak-hero { background: linear-gradient(135deg, #FFB6CB 0%, #E04D8C 100%); color: #FFFFFF; border-radius: 32px; padding: 32px 24px; box-shadow: 0 8px 18px rgba(224, 77, 140, 0.24); } .ds-streak-number { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 88px; font-weight: 900; line-height: 1; letter-spacing: -3px; margin-bottom: 4px; } .ds-streak-label { font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.92; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Daily Companion, Two Voices",
+    "overview": "MedBuddy lives in two places: a phone you open every morning, and a dashboard a worried family member checks before lunch. Same product, same brand DNA, two voices. The patient app speaks in Petal: warm pink-rose surfaces, generous rounded edges, small celebrations woven into a daily ritual. The monitor dashboard speaks in Vesper: an evening-toned violet, observant, calmer, more whitespace, more deference to the data. This is medical software that refuses to feel medical, but it also isn't a habit-tracker mascot screaming about your streak: stakes are real, a missed dose is information not a UI moment.",
+    "keyCharacteristics": [
+      "Two distinct palettes (pink Petal for patient, violet Vesper for monitor) sharing the same shape language, type system, and motion grammar",
+      "Generous radii (24-32px on cards, full radius on primary buttons) signal warmth and approachability",
+      "Flat by default. Color and type carry hierarchy. Shadows are reserved for press/hover state and the primary CTA only",
+      "Plus Jakarta Sans for display weight, Be Vietnam Pro for reading. Tight display tracking, comfortable body line-height",
+      "Color is never the only signal; verified/pending/missed always pair with an icon and word"
+    ],
+    "rules": [
+      { "name": "The Two-Voice Rule", "body": "Patient screens never use Vesper Violet; monitor screens never use Petal Rose. The shared brand sits in shape, type, and motion, not in color.", "section": "colors" },
+      { "name": "The Red-Is-Red Rule", "body": "Alert reds are not brand colors. Reserved for missed doses, validation failures, and destructive confirmations. Never decorative, never on a CTA, never on a chart bar that isn't reporting an alert.", "section": "colors" },
+      { "name": "The Sage-Is-Verified Rule", "body": "Green appears only when a dose is verified. The pairing verified ↔ sage is non-negotiable across both surfaces.", "section": "colors" },
+      { "name": "The One-Display Rule", "body": "A screen carries at most one display-tier element. Two competing 28+ pixel headlines means the layout is fighting itself.", "section": "typography" },
+      { "name": "The No-Gradient-Text Rule", "body": "Plus Jakarta Sans never gets a gradient fill via background-clip text. Color emphasis is solid Petal Rose, Vesper Violet, or ink.", "section": "typography" },
+      { "name": "The Press-Don't-Hover Rule", "body": "Cards don't lift on hover. Buttons don't lift on hover. Hover is a 200ms tint shift; press is a subtle scale (0.98 → 1.0).", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Petal Rose (#E04D8C) only on patient surfaces and Vesper Violet (#6D3FD3) only on monitor surfaces. The Two-Voice Rule is load-bearing.",
+      "Do pair every status color with an icon and a word. Color-blindness safety is a hard constraint.",
+      "Do keep the verified-sage hue identical in role across both surfaces.",
+      "Do reach for tonal contrast first when separating layers. Save shadow for the primary CTA and the dashboard hero card.",
+      "Do cap dashboard body line length at 65-75ch. The mobile app gets full container width.",
+      "Do treat verification as a non-decorative flow. Confidence values render honestly, capture state is plain, failure is information.",
+      "Do use the streak hero gradient at full saturation. The patient app earns its 'cheerful, encouraging, human' personality in this one moment per screen."
+    ],
+    "donts": [
+      "Don't look like a clinical portal. No white-on-blue, no grids of forms, no MyChart aesthetic.",
+      "Don't look pharma-corporate. No stock photos of smiling models, no navy-and-gold, no serif headlines pretending to be a legacy brand.",
+      "Don't gamify into anxiety. No mascots that look sad. No streak-loss confetti, no 'Don't break your 47-day streak!' alerts.",
+      "Don't look like a generic SaaS dashboard. No big-number-hero template, no identical card grids, no Recharts defaults.",
+      "Don't use side-stripe borders (border-left greater than 1px) as a colored accent on any card, callout, or alert.",
+      "Don't use gradient text via background-clip: text. Emphasis is solid color and weight.",
+      "Don't use glassmorphism. No blur-card on translucent background.",
+      "Don't use #000000 or #FFFFFF anywhere. Every neutral tints toward the matching surface's hue.",
+      "Don't add hover-lift on cards or buttons. Mobile has no hover; desktop's primary action is the press tint, not vertical motion.",
+      "Don't nest cards. A card inside a card is always a wrong answer.",
+      "Don't use compliance-language microcopy. Sixth-grade reading level, contractions, second person."
+    ]
+  }
+}

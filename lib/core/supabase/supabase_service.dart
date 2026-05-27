@@ -46,6 +46,44 @@ class SupabaseService {
     return MedicationModel.fromJson(inserted);
   }
 
+  Future<MedicationModel> updateMedication(MedicationModel med) async {
+    final updated = await _db
+        .from('medications')
+        .update({
+          'name': med.name,
+          'schedule_time':
+              '${_pad(med.scheduleTime.hour)}:${_pad(med.scheduleTime.minute)}:00',
+          'notes': med.notes,
+          'active': med.active,
+        })
+        .eq('id', med.id)
+        .select()
+        .single();
+    return MedicationModel.fromJson(updated);
+  }
+
+  Future<void> deleteMedication(String medicationId) async {
+    // Soft-delete via active=false so compliance_logs FK to historic rows survives.
+    await _db
+        .from('medications')
+        .update({'active': false})
+        .eq('id', medicationId);
+  }
+
+  Future<void> updateUserProfile({
+    required String userId,
+    String? name,
+    String? timezone,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (name != null) payload['name'] = name;
+    if (timezone != null) payload['timezone'] = timezone;
+    if (payload.isEmpty) return;
+    await _db.from('users').update(payload).eq('id', userId);
+  }
+
+  static String _pad(int n) => n.toString().padLeft(2, '0');
+
   // ---- Compliance
   Future<List<ComplianceLogModel>> fetchLogs(
     String userId, {

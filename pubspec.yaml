@@ -43,6 +43,9 @@ dependencies:
   flutter_accessibility_service: ^0.3.0
   flutter_overlay_window: ^0.4.5
 
+  # Local preferences (theme, timezone overrides)
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

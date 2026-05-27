@@ -135,7 +135,12 @@ create policy "users_read_linked" on public.users
 create policy "users_upsert_self" on public.users
   for insert with check (auth.uid() = id);
 create policy "users_update_self" on public.users
-  for update using (auth.uid() = id);
+  for update
+  using (auth.uid() = id)
+  with check (
+    auth.uid() = id
+    and role = (select role from public.users where id = auth.uid())
+  );
 
 -- monitor_links: both parties read; patient inserts
 create policy "links_read" on public.monitor_links for select using (
@@ -143,6 +148,8 @@ create policy "links_read" on public.monitor_links for select using (
 );
 create policy "links_insert_patient" on public.monitor_links
   for insert with check (patient_id = auth.uid());
+create policy "links_delete_either" on public.monitor_links
+  for delete using (patient_id = auth.uid() or monitor_id = auth.uid());
 
 -- medications: owner only
 create policy "meds_owner_read" on public.medications
@@ -176,6 +183,8 @@ create policy "tokens_owner_read" on public.device_tokens
   for select using (user_id = auth.uid());
 create policy "tokens_owner_write" on public.device_tokens
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "tokens_delete_owner" on public.device_tokens
+  for delete using (user_id = auth.uid());
 
 -- Storage bucket (run in SQL editor too) -------------------------
 -- insert into storage.buckets (id, name, public) values ('verifications', 'verifications', false)

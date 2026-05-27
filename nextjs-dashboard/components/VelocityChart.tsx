@@ -42,7 +42,7 @@ export default function VelocityChart({ logs }: { logs: ComplianceLog[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#F2EDEC" />
-            <XAxis dataKey="day" stroke="#1E1A1A" />
+            <XAxis dataKey="day" stroke="#1C1626" />
             <YAxis
               hide
               domain={[0, 1]}
@@ -50,9 +50,9 @@ export default function VelocityChart({ logs }: { logs: ComplianceLog[] }) {
             />
             <Tooltip
               formatter={(v: number) => `${Math.round(v * 100)}%`}
-              cursor={{ fill: '#FDF8F8' }}
+              cursor={{ fill: '#EEE7F7' }}
             />
-            <Bar dataKey="score" fill="#AE2F34" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="score" fill="#6D3FD3" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -11,6 +11,7 @@ import 'core/router/app_router.dart';
 import 'core/supabase/supabase_client.dart';
 import 'features/lock/lock_gate.dart';
 import 'features/profile/theme_provider.dart';
+import 'shared/providers/medication_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,6 @@ Future<void> main() async {
 
   await SupabaseBootstrap.init();
   await NotificationService.instance.init();
-  await NotificationService.instance.scheduleDailyReminder();
   await BackgroundScheduler.init();
 
   runApp(const ProviderScope(child: MedBuddyApp()));
@@ -36,6 +36,15 @@ class MedBuddyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+
+    // Re-schedule local reminders whenever the medication list changes
+    // (boot, after create/edit/delete). Keeps notification IDs in sync with
+    // real medication.id.hashCode values so updates replace, don't stack.
+    ref.listen(medicationsProvider, (_, next) {
+      final meds = next.valueOrNull;
+      if (meds == null) return;
+      NotificationService.instance.scheduleAllReminders(meds);
+    });
     return MaterialApp.router(
       title: 'MedBuddy',
       debugShowCheckedModeBanner: false,
@@ -78,7 +87,7 @@ class MedBuddyApp extends ConsumerWidget {
           filled: true,
           fillColor: AppColors.darkSurfaceContainer,
           border: OutlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF55474A)),
+            borderSide: BorderSide(color: Color(0xFF6B4D58)),
           ),
         ),
       ),

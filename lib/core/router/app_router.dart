@@ -6,6 +6,7 @@ import '../../features/credits/credits_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/lock/lock_screen.dart';
+import '../../features/medication/medication_edit_screen.dart';
 import '../../features/onboarding/onboarding_accessibility_screen.dart';
 import '../../features/onboarding/onboarding_medication_screen.dart';
 import '../../features/onboarding/onboarding_monitor_screen.dart';
@@ -13,6 +14,7 @@ import '../../features/onboarding/onboarding_welcome_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/verification/verification_screen.dart';
+import '../../shared/models/medication_model.dart';
 import '../../shared/widgets/medbuddy_scaffold.dart';
 
 class AppRoute {
@@ -28,6 +30,7 @@ class AppRoute {
   static const verification = 'verification';
   static const lock = 'lock';
   static const credits = 'credits';
+  static const medicationEdit = 'medicationEdit';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -101,6 +104,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoute.credits,
         path: '/credits',
         builder: (_, _) => const CreditsScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.medicationEdit,
+        path: '/medication/edit',
+        builder: (_, state) => MedicationEditScreen(
+          medication: state.extra is MedicationModel
+              ? state.extra as MedicationModel
+              : null,
+        ),
       ),
     ],
   );

@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/router/app_router.dart';
+import '../../shared/models/medication_model.dart';
+import '../../shared/providers/auth_provider.dart';
+import '../../shared/providers/medication_provider.dart';
+import '../../shared/providers/supabase_providers.dart';
 import '../../shared/widgets/primary_button.dart';
 
-class OnboardingMedicationScreen extends StatefulWidget {
+class OnboardingMedicationScreen extends ConsumerStatefulWidget {
   const OnboardingMedicationScreen({super.key});
 
   @override
-  State<OnboardingMedicationScreen> createState() =>
+  ConsumerState<OnboardingMedicationScreen> createState() =>
       _OnboardingMedicationScreenState();
 }
 
 class _OnboardingMedicationScreenState
-    extends State<OnboardingMedicationScreen> {
-  final _nameCtrl = TextEditingController(text: 'Iron + Creatine');
+    extends ConsumerState<OnboardingMedicationScreen> {
+  final _nameCtrl = TextEditingController();
   TimeOfDay _time = const TimeOfDay(hour: 12, minute: 30);
   String _frequency = 'Daily';
+  bool _saving = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -30,6 +37,44 @@ class _OnboardingMedicationScreenState
     final picked =
         await showTimePicker(context: context, initialTime: _time);
     if (picked != null) setState(() => _time = picked);
+  }
+
+  Future<void> _onContinue() async {
+    final user = ref.read(currentSupabaseUserProvider);
+    if (user == null) {
+      setState(() => _error = 'Sign in first.');
+      return;
+    }
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Enter a medication name.');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final med = MedicationModel(
+        id: '',
+        userId: user.id,
+        name: name,
+        scheduleTime: _time,
+        notes: '',
+        active: true,
+        createdAt: DateTime.now().toUtc(),
+      );
+      await ref.read(supabaseServiceProvider).createMedication(med);
+      ref.invalidate(medicationsProvider);
+      if (!mounted) return;
+      context.goNamed(AppRoute.onboardingMonitor);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Couldn\'t save: $e';
+      });
+    }
   }
 
   @override
@@ -101,12 +146,21 @@ class _OnboardingMedicationScreenState
                     onChanged: (v) =>
                         setState(() => _frequency = v ?? 'Daily'),
                   ),
+                  if (_error != null) ...[
+                    const SizedBox(height: AppDimensions.space12),
+                    Text(
+                      _error!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.error,
+                          ),
+                    ),
+                  ],
                   const Spacer(),
                   PrimaryButton(
-                    label: 'Continue',
+                    label: _saving ? 'Saving…' : 'Continue',
                     icon: Icons.arrow_forward_rounded,
-                    onPressed: () =>
-                        context.goNamed(AppRoute.onboardingMonitor),
+                    loading: _saving,
+                    onPressed: _saving ? null : _onContinue,
                   ),
                 ],
               ),

@@ -20,12 +20,24 @@ export default async function Home() {
           Track adherence in real time. Sign in to view your linked
           patient&apos;s streak and verification log.
         </p>
-        <Link
-          href="/login"
-          className="block w-full text-center bg-coral-gradient text-white font-semibold py-3 rounded-full shadow-lg"
-        >
-          Sign in
-        </Link>
+        <div className="space-y-3">
+          <Link
+            href="/login"
+            className="block w-full text-center bg-coral-gradient text-white font-semibold py-3 rounded-full shadow-lg"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/login?mode=signup"
+            className="block w-full text-center border-2 border-primary text-primary font-semibold py-3 rounded-full hover:bg-primary/5"
+          >
+            Sign up to monitor
+          </Link>
+          <p className="text-xs text-ink/55 text-center leading-relaxed pt-2">
+            Patients sign up in the <strong>mobile app</strong>. This
+            dashboard is for the monitor.
+          </p>
+        </div>
       </div>
     </main>
   );

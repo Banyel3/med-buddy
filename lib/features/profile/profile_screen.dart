@@ -8,6 +8,7 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/router/app_router.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/medication_provider.dart';
+import '../../shared/providers/supabase_providers.dart';
 import '../../shared/widgets/medbuddy_scaffold.dart';
 import '../../shared/widgets/primary_button.dart';
 import 'theme_provider.dart';
@@ -24,6 +25,7 @@ class ProfileScreen extends ConsumerWidget {
     final linkCode = supaUser != null
         ? 'MB-${supaUser.id.substring(0, 6).toUpperCase()}'
         : 'MB-XXXXXX';
+    final linkCodeFull = supaUser?.id ?? '';
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -42,6 +44,11 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.person_rounded,
                     label: 'Name',
                     value: user?.name.isNotEmpty == true ? user!.name : '—',
+                    onTap: supaUser == null
+                        ? null
+                        : () => _editName(context, ref,
+                            userId: supaUser.id,
+                            current: user?.name ?? ''),
                   ),
                   _Row(
                     icon: Icons.email_rounded,
@@ -52,6 +59,11 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.language_rounded,
                     label: 'Timezone',
                     value: user?.timezone ?? 'Asia/Manila',
+                    onTap: supaUser == null
+                        ? null
+                        : () => _editTimezone(context, ref,
+                            userId: supaUser.id,
+                            current: user?.timezone ?? 'Asia/Manila'),
                   ),
                 ],
               ),
@@ -72,15 +84,38 @@ class ProfileScreen extends ConsumerWidget {
                             Text(linkCode,
                                 style:
                                     Theme.of(context).textTheme.headlineSmall),
+                            if (linkCodeFull.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'or paste: $linkCodeFull',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontFamily: 'monospace',
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.color
+                                          ?.withValues(alpha: 0.7),
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ],
                         ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.copy_rounded),
+                        tooltip: 'Copy full link code',
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: linkCode));
+                          Clipboard.setData(
+                              ClipboardData(text: linkCodeFull));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Code copied')),
+                            const SnackBar(
+                                content: Text(
+                                    'Full link code copied — paste into Monitor dashboard')),
                           );
                         },
                       ),
@@ -174,10 +209,16 @@ class _Row extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _Row({required this.icon, required this.label, required this.value});
+  final VoidCallback? onTap;
+  const _Row({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.onTap,
+  });
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
@@ -186,8 +227,102 @@ class _Row extends StatelessWidget {
           Text(label, style: Theme.of(context).textTheme.bodyMedium),
           const Spacer(),
           Text(value, style: Theme.of(context).textTheme.titleSmall),
+          if (onTap != null) ...[
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right_rounded,
+                color: AppColors.outline, size: 18),
+          ],
         ],
       ),
     );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: row,
+    );
   }
+}
+
+Future<void> _editName(
+  BuildContext context,
+  WidgetRef ref, {
+  required String userId,
+  required String current,
+}) async {
+  final ctrl = TextEditingController(text: current);
+  final next = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Edit name'),
+      content: TextField(
+        controller: ctrl,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(border: OutlineInputBorder()),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+  if (next == null || next.isEmpty || next == current) return;
+  await ref
+      .read(supabaseServiceProvider)
+      .updateUserProfile(userId: userId, name: next);
+  ref.invalidate(currentUserProvider);
+}
+
+Future<void> _editTimezone(
+  BuildContext context,
+  WidgetRef ref, {
+  required String userId,
+  required String current,
+}) async {
+  const options = <String>[
+    'Asia/Manila',
+    'Asia/Singapore',
+    'Asia/Tokyo',
+    'Asia/Hong_Kong',
+    'America/Los_Angeles',
+    'America/New_York',
+    'Europe/London',
+    'Europe/Berlin',
+    'Australia/Sydney',
+    'UTC',
+  ];
+  final next = await showDialog<String>(
+    context: context,
+    builder: (ctx) => SimpleDialog(
+      title: const Text('Pick a timezone'),
+      children: options
+          .map((tz) => SimpleDialogOption(
+                onPressed: () => Navigator.of(ctx).pop(tz),
+                child: Row(
+                  children: [
+                    if (tz == current)
+                      const Icon(Icons.check_rounded,
+                          size: 18, color: AppColors.primary)
+                    else
+                      const SizedBox(width: 18),
+                    const SizedBox(width: 12),
+                    Text(tz),
+                  ],
+                ),
+              ))
+          .toList(),
+    ),
+  );
+  if (next == null || next == current) return;
+  await ref
+      .read(supabaseServiceProvider)
+      .updateUserProfile(userId: userId, timezone: next);
+  ref.invalidate(currentUserProvider);
 }
