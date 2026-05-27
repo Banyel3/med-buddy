@@ -11,6 +11,8 @@ import '../../shared/providers/medication_provider.dart';
 import '../../shared/providers/supabase_providers.dart';
 import '../../shared/widgets/medbuddy_scaffold.dart';
 import '../../shared/widgets/primary_button.dart';
+import '../lock/lock_mode_provider.dart';
+import '../lock/services/accessibility_lock_service.dart';
 import 'theme_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -22,6 +24,7 @@ class ProfileScreen extends ConsumerWidget {
     final supaUser = ref.watch(currentSupabaseUserProvider);
     final meds = ref.watch(medicationsProvider).valueOrNull ?? const [];
     final themeMode = ref.watch(themeModeProvider);
+    final lockMode = ref.watch(lockModeProvider);
     final linkCode = supaUser != null
         ? 'MB-${supaUser.id.substring(0, 6).toUpperCase()}'
         : 'MB-XXXXXX';
@@ -161,6 +164,42 @@ class ProfileScreen extends ConsumerWidget {
                     onChanged: (v) => ref
                         .read(themeModeProvider.notifier)
                         .set(v ? ThemeMode.dark : ThemeMode.light),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Lock style',
+                            style: Theme.of(context).textTheme.bodyMedium),
+                        const SizedBox(height: 4),
+                        SegmentedButton<LockMode>(
+                          segments: const [
+                            ButtonSegment(
+                              value: LockMode.hard,
+                              label: Text('Hard'),
+                              icon: Icon(Icons.lock_rounded),
+                            ),
+                            ButtonSegment(
+                              value: LockMode.soft,
+                              label: Text('Soft'),
+                              icon: Icon(Icons.lock_open_rounded),
+                            ),
+                          ],
+                          selected: {lockMode},
+                          onSelectionChanged: (s) => ref
+                              .read(lockModeProvider.notifier)
+                              .set(s.first),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          lockMode == LockMode.hard
+                              ? 'Phone locks until you verify. Most effective.'
+                              : 'Phone locks but a "Skip" button can dismiss it after 5 taps.',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,

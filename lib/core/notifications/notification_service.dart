@@ -126,10 +126,14 @@ class NotificationService {
   /// Cancels every reminder and re-schedules one set per active medication.
   /// Stable per-med IDs via `medication.id.hashCode` so re-runs replace rather
   /// than duplicate. Three notifications per med: reminder, T+15 escalation,
-  /// T+30 lock.
+  /// T+30 lock. Also schedules a native AlarmManager exact-alarm so the lock
+  /// auto-engages whether the app is foregrounded or killed.
   Future<void> scheduleAllReminders(List<MedicationModel> meds) async {
     await init();
     await _plugin.cancelAll();
+    // Wipe any existing native lock alarms before re-scheduling. Ensures
+    // deleted / deactivated meds stop locking the device.
+    await AccessibilityLockService.instance.cancelAllLockAlarms();
     for (final med in meds.where((m) => m.active)) {
       final base = med.id.hashCode & 0x7FFFFFFF; // positive 31-bit
       final remindAt = ScheduleMath.nextInstanceOf(med.scheduleTime, tz.local);
@@ -173,6 +177,14 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'lock-activate',
+      );
+
+      // Native AlarmManager auto-arm — fires even when app is killed.
+      await AccessibilityLockService.instance.scheduleLockAlarm(
+        medId: med.id,
+        medName: med.name,
+        hour: med.scheduleTime.hour,
+        minute: med.scheduleTime.minute,
       );
     }
   }

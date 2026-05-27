@@ -115,22 +115,22 @@ class _StreakCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.space24),
+      padding: const EdgeInsets.all(AppDimensions.space20),
       decoration: BoxDecoration(
         gradient: AppColors.coralGradient,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: AppColors.primary.withValues(alpha: 0.15),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Row(
         children: [
           const Icon(Icons.local_fire_department_rounded,
-              size: 56, color: AppColors.onPrimary),
+              size: 42, color: AppColors.onPrimary),
           const SizedBox(width: AppDimensions.space16),
           Expanded(
             child: Column(

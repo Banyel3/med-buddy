@@ -156,7 +156,10 @@ class VerificationController extends StateNotifier<VerificationState> {
         ),
       );
       // Release the lock if active (Phase 3).
-      await _ref.read(lockServiceProvider).deactivate();
+      final lockSvc = _ref.read(lockServiceProvider);
+      await lockSvc.deactivate();
+      // Cancel today's auto-lock alarm for this med so it doesn't re-arm.
+      if (med != null) await lockSvc.cancelLockAlarm(med.id);
       state = state.copyWith(submitting: false);
       return true;
     } catch (e, st) {

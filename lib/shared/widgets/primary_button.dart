@@ -29,7 +29,7 @@ class PrimaryButton extends StatelessWidget {
         onTap: disabled ? null : onPressed,
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
         child: Container(
-          height: 56,
+          height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 24),
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -38,13 +38,15 @@ class PrimaryButton extends StatelessWidget {
                 ? (disabled ? AppColors.outline : AppColors.primary)
                 : null,
             borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            // Softer, cuter elevation. Half the blur + offset of before,
+            // brand-tinted but airy.
             boxShadow: disabled
                 ? null
                 : [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.30),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
+                      color: AppColors.primary.withValues(alpha: 0.18),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
           ),

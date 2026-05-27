@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 
 /**
  * Hosts a system-level overlay window that covers all other apps while the
@@ -29,9 +30,13 @@ class LockOverlayService : Service() {
     private var overlay: View? = null
     private var windowManager: WindowManager? = null
 
+    /// Soft-mode tap counter. Resets every time the overlay is shown.
+    private var softTapsRemaining: Int = SOFT_TAPS_REQUIRED
+
     companion object {
         const val ACTION_SHOW = "com.medbuddy.medbuddy.LOCK_SHOW"
         const val ACTION_HIDE = "com.medbuddy.medbuddy.LOCK_HIDE"
+        private const val SOFT_TAPS_REQUIRED = 5
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -80,12 +85,37 @@ class LockOverlayService : Service() {
                 as LayoutInflater
         val view = inflater.inflate(R.layout.lock_overlay, null, false)
 
+        // Soft-mode skip button — visible only when lock_mode = SOFT.
+        val mode = LockModePrefs.get(this)
+        val skipButton = view.findViewById<Button>(R.id.lock_soft_skip)
+        if (skipButton != null) {
+            if (mode == LockMode.SOFT) {
+                softTapsRemaining = SOFT_TAPS_REQUIRED
+                skipButton.visibility = View.VISIBLE
+                skipButton.text = "Skip for now (tap ${softTapsRemaining}×)"
+                skipButton.setOnClickListener {
+                    softTapsRemaining -= 1
+                    if (softTapsRemaining <= 0) {
+                        Log.i(tag, "Soft lock dismissed by user (5 taps).")
+                        LockState.locked = false
+                        hideOverlay()
+                    } else {
+                        skipButton.text =
+                            "Skip for now (tap ${softTapsRemaining}×)"
+                    }
+                }
+            } else {
+                skipButton.visibility = View.GONE
+                skipButton.setOnClickListener(null)
+            }
+        }
+
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         try {
             wm.addView(view, params)
             overlay = view
             windowManager = wm
-            Log.i(tag, "Overlay shown (type=$type).")
+            Log.i(tag, "Overlay shown (type=$type, mode=$mode).")
         } catch (e: Exception) {
             Log.e(tag, "addView failed", e)
         }

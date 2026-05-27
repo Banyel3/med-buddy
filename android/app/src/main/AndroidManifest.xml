@@ -84,6 +84,12 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="medbuddy_lock_overlay"/>
         </service>
+
+        <!-- Phase 3 lock — exact-alarm receiver. Auto-engages the lock at
+             scheduled med time + 30 minutes regardless of foreground / Doze. -->
+        <receiver
+            android:name=".LockAlarmReceiver"
+            android:exported="false"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

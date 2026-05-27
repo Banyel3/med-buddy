@@ -62,6 +62,44 @@ class MainActivity : FlutterActivity() {
                         }
                         result.success(true)
                     }
+                    "scheduleLockAlarm" -> {
+                        val medId = call.argument<String>("medId") ?: ""
+                        val medName = call.argument<String>("medName") ?: ""
+                        val hour = call.argument<Int>("hour") ?: -1
+                        val minute = call.argument<Int>("minute") ?: -1
+                        if (medId.isEmpty() || hour !in 0..23 || minute !in 0..59) {
+                            result.error("ARG", "Bad args for scheduleLockAlarm", null)
+                        } else {
+                            val triggerAt = LockAlarmScheduler.scheduleForMed(
+                                this, medId, medName, hour, minute,
+                            )
+                            result.success(triggerAt)
+                        }
+                    }
+                    "cancelLockAlarm" -> {
+                        val medId = call.argument<String>("medId") ?: ""
+                        if (medId.isEmpty()) {
+                            result.error("ARG", "medId required", null)
+                        } else {
+                            LockAlarmScheduler.cancel(this, medId)
+                            result.success(true)
+                        }
+                    }
+                    "cancelAllLockAlarms" -> {
+                        LockAlarmScheduler.cancelAll(this)
+                        result.success(true)
+                    }
+                    "setLockMode" -> {
+                        val mode = (call.argument<String>("mode") ?: "hard")
+                            .uppercase()
+                        val parsed = runCatching { LockMode.valueOf(mode) }
+                            .getOrDefault(LockMode.HARD)
+                        LockModePrefs.set(this, parsed)
+                        result.success(parsed.name)
+                    }
+                    "getLockMode" -> {
+                        result.success(LockModePrefs.get(this).name)
+                    }
                     else -> result.notImplemented()
                 }
             }
