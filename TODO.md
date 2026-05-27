@@ -30,12 +30,12 @@ Living checklist. Tick as done. Order = do top → bottom.
 
 ## 1. Supabase project (blocks everything backend)
 
-- [ ] Create project at https://supabase.com
-- [ ] Copy `Project URL` + `anon public` key → paste into `.env` (root) AND `nextjs-dashboard/.env.local`
-- [ ] Copy `service_role` key into `nextjs-dashboard/.env.local` as `SUPABASE_SERVICE_ROLE_KEY`
-- [ ] Run `supabase/schema.sql` in Supabase SQL editor (creates all 6 tables, enum types, streak trigger, RLS policies)
-- [ ] Storage → create private bucket `verifications` → uncomment + run the two `storage.objects` policies at the bottom of `schema.sql`
-- [ ] Auth → enable Email provider; toggle off email confirmation for dev
+- [x] Create project at https://supabase.com
+- [x] Copy `Project URL` + `anon public` key → paste into `.env` (root) AND `nextjs-dashboard/.env.local`
+- [x] Copy `service_role` key into `nextjs-dashboard/.env.local` as `SUPABASE_SERVICE_ROLE_KEY`
+- [x] Run `supabase/schema.sql` in Supabase SQL editor (creates all 6 tables, enum types, streak trigger, RLS policies)
+- [x] Storage → create private bucket `verifications` → uncomment + run the two `storage.objects` policies at the bottom of `schema.sql`
+- [x] Auth → enable Email provider; toggle off email confirmation for dev (dashboard side, user-confirmed)
 - [ ] After first sign-up: manually insert a `users` row (`id = auth.users.id`, name, role) — or wire a trigger later
 
 ## 2. Phase 1 smoke test (UI shell)
@@ -72,14 +72,14 @@ Living checklist. Tick as done. Order = do top → bottom.
 - [ ] Manually insert a `monitor_links` row linking your monitor account to the patient account
 - [ ] Confirm dashboard live-updates when patient verifies a dose (Supabase Realtime)
 - [ ] Deploy: `vercel --prod` → set the 3 env vars in Vercel project settings
-- [ ] `supabase functions deploy miss-alert`
-- [ ] `supabase functions deploy daily-rollover`
-- [ ] `supabase functions deploy storage-ttl`
+- [x] `supabase functions deploy miss-alert` (`--no-verify-jwt`)
+- [x] `supabase functions deploy daily-rollover` (`--no-verify-jwt`, WEBHOOK_SECRET-gated)
+- [x] `supabase functions deploy storage-ttl` (`--no-verify-jwt`, WEBHOOK_SECRET-gated)
 - [ ] `supabase secrets set FCM_SERVER_KEY=...` (Firebase console → Project settings → Cloud Messaging → Server key)
-- [ ] **Security:** `SECRET=$(openssl rand -hex 32) && supabase secrets set WEBHOOK_SECRET="$SECRET"` — then add HTTP header `x-webhook-secret: $SECRET` to the Database Webhook config (miss-alert returns 401 without it)
-- [ ] Add Database Webhook in Supabase: table=compliance_logs, event=UPDATE, condition=`new.status='missed' AND old.status!='missed'`, URL=function URL, HTTP headers include `x-webhook-secret`
-- [ ] Schedule `daily-rollover` via Supabase cron: `5 0 * * *` (00:05 Asia/Manila)
-- [ ] Schedule `storage-ttl` via Supabase cron: `30 0 * * *` (UTC)
+- [x] **Security:** `WEBHOOK_SECRET` generated + set; stored in `vault.secrets` as `webhook_secret`
+- [x] DB Webhook wired via SQL trigger `compliance_logs_miss_alert` (AFTER UPDATE, vault-secret header)
+- [x] Schedule `daily-rollover` via `pg_cron`: `5 16 * * *` UTC = 00:05 Asia/Manila
+- [x] Schedule `storage-ttl` via `pg_cron`: `30 0 * * *` UTC
 - [ ] Wire FCM device-token registration in mobile app (Phase 5 — see below)
 
 ---

@@ -8,11 +8,17 @@
 // ---------------------------------------------------------------
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { checkWebhookSecret } from '../_shared/security.ts';
 import { isPhotoExpired } from '../_shared/streak_math.ts';
 
 const RETENTION_DAYS = 30;
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  const auth = checkWebhookSecret(req, Deno.env.get('WEBHOOK_SECRET'));
+  if (!auth.ok) {
+    return new Response(`unauthorized: ${auth.reason}`, { status: 401 });
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,

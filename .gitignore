@@ -22,6 +22,9 @@ build/
 *.jks
 **/android/key.properties
 
+# Supabase CLI link state (per-machine)
+supabase/.temp/
+
 # OS
 .DS_Store
 Thumbs.db
