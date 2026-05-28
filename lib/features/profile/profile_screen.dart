@@ -25,8 +25,7 @@ class ProfileScreen extends ConsumerWidget {
     final meds = ref.watch(medicationsProvider).valueOrNull ?? const [];
     final themeMode = ref.watch(themeModeProvider);
     final lockMode = ref.watch(lockModeProvider);
-    final lockEnvPinned =
-        ref.read(lockModeProvider.notifier).envPinned;
+    final lockEnvPinned = ref.read(lockModeProvider.notifier).envPinned;
     final linkCode = supaUser != null
         ? 'MB-${supaUser.id.substring(0, 6).toUpperCase()}'
         : 'MB-XXXXXX';
@@ -40,8 +39,7 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Profile',
-                  style: Theme.of(context).textTheme.headlineLarge),
+              Text('Profile', style: Theme.of(context).textTheme.headlineLarge),
               const SizedBox(height: AppDimensions.space24),
               _Card(
                 children: [
@@ -51,9 +49,12 @@ class ProfileScreen extends ConsumerWidget {
                     value: user?.name.isNotEmpty == true ? user!.name : '—',
                     onTap: supaUser == null
                         ? null
-                        : () => _editName(context, ref,
+                        : () => _editName(
+                            context,
+                            ref,
                             userId: supaUser.id,
-                            current: user?.name ?? ''),
+                            current: user?.name ?? '',
+                          ),
                   ),
                   _Row(
                     icon: Icons.email_rounded,
@@ -66,9 +67,12 @@ class ProfileScreen extends ConsumerWidget {
                     value: user?.timezone ?? 'Asia/Manila',
                     onTap: supaUser == null
                         ? null
-                        : () => _editTimezone(context, ref,
+                        : () => _editTimezone(
+                            context,
+                            ref,
                             userId: supaUser.id,
-                            current: user?.timezone ?? 'Asia/Manila'),
+                            current: user?.timezone ?? 'Asia/Manila',
+                          ),
                   ),
                 ],
               ),
@@ -77,25 +81,28 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.qr_code_rounded,
-                          color: AppColors.primary),
+                      const Icon(
+                        Icons.qr_code_rounded,
+                        color: AppColors.primary,
+                      ),
                       const SizedBox(width: AppDimensions.space12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Monitor link code',
-                                style: Theme.of(context).textTheme.labelLarge),
-                            Text(linkCode,
-                                style:
-                                    Theme.of(context).textTheme.headlineSmall),
+                            Text(
+                              'Monitor link code',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            Text(
+                              linkCode,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
                             if (linkCodeFull.isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Text(
                                 'or paste: $linkCodeFull',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       fontFamily: 'monospace',
                                       color: Theme.of(context)
@@ -115,12 +122,13 @@ class ProfileScreen extends ConsumerWidget {
                         icon: const Icon(Icons.copy_rounded),
                         tooltip: 'Copy full link code',
                         onPressed: () {
-                          Clipboard.setData(
-                              ClipboardData(text: linkCodeFull));
+                          Clipboard.setData(ClipboardData(text: linkCodeFull));
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text(
-                                    'Full link code copied — paste into Monitor dashboard')),
+                              content: Text(
+                                'Full link code copied — paste into Monitor dashboard',
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -131,34 +139,45 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: AppDimensions.space16),
               _Card(
                 children: [
-                  Text('Medications',
-                      style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Medications',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: AppDimensions.space12),
                   if (meds.isEmpty)
-                    Text('No medications yet.',
-                        style: Theme.of(context).textTheme.bodyMedium)
+                    Text(
+                      'No medications yet.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
                   else
-                    ...meds.map((m) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.medication_rounded,
-                                  color: AppColors.primary),
-                              const SizedBox(width: 12),
-                              Expanded(child: Text(m.name)),
-                              Text(m.scheduleTime.format(context),
-                                  style:
-                                      Theme.of(context).textTheme.bodyMedium),
-                            ],
-                          ),
-                        )),
+                    ...meds.map(
+                      (m) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.medication_rounded,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(m.name)),
+                            Text(
+                              m.scheduleTime.format(context),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: AppDimensions.space16),
               _Card(
                 children: [
-                  Text('Preferences',
-                      style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Preferences',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Dark mode'),
@@ -172,8 +191,10 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Lock style',
-                            style: Theme.of(context).textTheme.bodyMedium),
+                        Text(
+                          'Lock style',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                         const SizedBox(height: 4),
                         SegmentedButton<LockMode>(
                           segments: const [
@@ -192,16 +213,16 @@ class ProfileScreen extends ConsumerWidget {
                           onSelectionChanged: lockEnvPinned
                               ? null
                               : (s) => ref
-                                  .read(lockModeProvider.notifier)
-                                  .set(s.first),
+                                    .read(lockModeProvider.notifier)
+                                    .set(s.first),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           lockEnvPinned
                               ? 'Pinned by build flag / .env (MEDBUDDY_LOCK_MODE). Unset to enable this toggle.'
                               : lockMode == LockMode.hard
-                                  ? 'Phone locks until you verify. Most effective.'
-                                  : 'Phone locks but a "Skip" button can dismiss it after 5 taps.',
+                              ? 'Phone locks until you verify. Most effective.'
+                              : 'Phone locks but a "Skip" button can dismiss it after 5 taps.',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -245,7 +266,10 @@ class _Card extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
     );
   }
 }
@@ -274,8 +298,11 @@ class _Row extends StatelessWidget {
           Text(value, style: Theme.of(context).textTheme.titleSmall),
           if (onTap != null) ...[
             const SizedBox(width: 6),
-            Icon(Icons.chevron_right_rounded,
-                color: AppColors.outline, size: 18),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.outline,
+              size: 18,
+            ),
           ],
         ],
       ),
@@ -348,20 +375,25 @@ Future<void> _editTimezone(
     builder: (ctx) => SimpleDialog(
       title: const Text('Pick a timezone'),
       children: options
-          .map((tz) => SimpleDialogOption(
-                onPressed: () => Navigator.of(ctx).pop(tz),
-                child: Row(
-                  children: [
-                    if (tz == current)
-                      const Icon(Icons.check_rounded,
-                          size: 18, color: AppColors.primary)
-                    else
-                      const SizedBox(width: 18),
-                    const SizedBox(width: 12),
-                    Text(tz),
-                  ],
-                ),
-              ))
+          .map(
+            (tz) => SimpleDialogOption(
+              onPressed: () => Navigator.of(ctx).pop(tz),
+              child: Row(
+                children: [
+                  if (tz == current)
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    )
+                  else
+                    const SizedBox(width: 18),
+                  const SizedBox(width: 12),
+                  Text(tz),
+                ],
+              ),
+            ),
+          )
           .toList(),
     ),
   );

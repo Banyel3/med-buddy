@@ -69,8 +69,8 @@ class CreditsScreen extends StatelessWidget {
             Text(
               'See LICENSE files in the source repository for full terms.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurface.withValues(alpha: 0.6),
-                  ),
+                color: AppColors.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ],
         ),
@@ -107,16 +107,19 @@ class _CreditCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(credit.title,
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(credit.title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 4),
-          Text('by ${credit.author} — ${credit.license}',
-              style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'by ${credit.author} — ${credit.license}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 4),
-          Text(credit.url,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.primary,
-                  )),
+          Text(
+            credit.url,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.primary),
+          ),
         ],
       ),
     );

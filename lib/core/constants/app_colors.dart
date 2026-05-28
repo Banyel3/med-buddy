@@ -42,20 +42,20 @@ class AppColors {
   );
 
   static ColorScheme get lightScheme => const ColorScheme(
-        brightness: Brightness.light,
-        primary: primary,
-        onPrimary: onPrimary,
-        secondary: secondary,
-        onSecondary: onPrimary,
-        tertiary: accent,
-        onTertiary: onSurface,
-        error: error,
-        onError: onPrimary,
-        surface: surface,
-        onSurface: onSurface,
-        surfaceContainerHighest: surfaceContainer,
-        outline: outline,
-      );
+    brightness: Brightness.light,
+    primary: primary,
+    onPrimary: onPrimary,
+    secondary: secondary,
+    onSecondary: onPrimary,
+    tertiary: accent,
+    onTertiary: onSurface,
+    error: error,
+    onError: onPrimary,
+    surface: surface,
+    onSurface: onSurface,
+    surfaceContainerHighest: surfaceContainer,
+    outline: outline,
+  );
 
   // Dark tokens — plum-tinted blacks, blush primary for legibility.
   static const Color darkSurface = Color(0xFF1B1015);
@@ -63,18 +63,18 @@ class AppColors {
   static const Color darkOnSurface = Color(0xFFF7E3EC);
 
   static ColorScheme get darkScheme => const ColorScheme(
-        brightness: Brightness.dark,
-        primary: Color(0xFFFFB6CB), // blush — legible on dark plum
-        onPrimary: Color(0xFF1F0A14),
-        secondary: Color(0xFF6CB57E),
-        onSecondary: Color(0xFF0C1E0F),
-        tertiary: Color(0xFFF9CDDB),
-        onTertiary: Color(0xFF1F0A14),
-        error: Color(0xFFFFB6BA),
-        onError: Color(0xFF1F0A14),
-        surface: darkSurface,
-        onSurface: darkOnSurface,
-        surfaceContainerHighest: darkSurfaceContainer,
-        outline: Color(0xFF6B4D58),
-      );
+    brightness: Brightness.dark,
+    primary: Color(0xFFFFB6CB), // blush — legible on dark plum
+    onPrimary: Color(0xFF1F0A14),
+    secondary: Color(0xFF6CB57E),
+    onSecondary: Color(0xFF0C1E0F),
+    tertiary: Color(0xFFF9CDDB),
+    onTertiary: Color(0xFF1F0A14),
+    error: Color(0xFFFFB6BA),
+    onError: Color(0xFF1F0A14),
+    surface: darkSurface,
+    onSurface: darkOnSurface,
+    surfaceContainerHighest: darkSurfaceContainer,
+    outline: Color(0xFF6B4D58),
+  );
 }

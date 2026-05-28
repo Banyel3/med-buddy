@@ -27,18 +27,24 @@ class OnboardingWelcomeScreen extends StatelessWidget {
                     height: 220,
                     decoration: BoxDecoration(
                       gradient: AppColors.coralGradient,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusXl),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusXl,
+                      ),
                     ),
                     child: const Center(
-                      child: Icon(Icons.favorite_rounded,
-                          size: 96, color: AppColors.onPrimary),
+                      child: Icon(
+                        Icons.favorite_rounded,
+                        size: 96,
+                        color: AppColors.onPrimary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppDimensions.space32),
-                  Text('Welcome to MedBuddy',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineLarge),
+                  Text(
+                    'Welcome to MedBuddy',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
                   const SizedBox(height: AppDimensions.space12),
                   Text(
                     'Your gentle daily nudge to take your meds — verified with a quick selfie + pill check.',

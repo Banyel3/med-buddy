@@ -18,8 +18,11 @@ class SupabaseService {
   Future<UserModel?> fetchCurrentUser() async {
     final auth = _db.auth.currentUser;
     if (auth == null) return null;
-    final row =
-        await _db.from('users').select().eq('id', auth.id).maybeSingle();
+    final row = await _db
+        .from('users')
+        .select()
+        .eq('id', auth.id)
+        .maybeSingle();
     return row == null ? null : UserModel.fromJson(row);
   }
 
@@ -41,8 +44,11 @@ class SupabaseService {
   }
 
   Future<MedicationModel> createMedication(MedicationModel med) async {
-    final inserted =
-        await _db.from('medications').insert(med.toJson()).select().single();
+    final inserted = await _db
+        .from('medications')
+        .insert(med.toJson())
+        .select()
+        .single();
     return MedicationModel.fromJson(inserted);
   }
 
@@ -68,7 +74,8 @@ class SupabaseService {
         .select();
     if (rows.isEmpty) {
       throw StateError(
-          'Medication not found or you no longer have access to it.');
+        'Medication not found or you no longer have access to it.',
+      );
     }
     return MedicationModel.fromJson(rows.first);
   }
@@ -87,7 +94,8 @@ class SupabaseService {
         .select('id');
     if (rows.isEmpty) {
       throw StateError(
-          'Medication not found or you no longer have access to it.');
+        'Medication not found or you no longer have access to it.',
+      );
     }
   }
 
@@ -112,8 +120,12 @@ class SupabaseService {
     DateTime? to,
   }) async {
     var q = _db.from('compliance_logs').select().eq('user_id', userId);
-    if (from != null) q = q.gte('date', from.toIso8601String().substring(0, 10));
-    if (to != null) q = q.lte('date', to.toIso8601String().substring(0, 10));
+    if (from != null) {
+      q = q.gte('date', from.toIso8601String().substring(0, 10));
+    }
+    if (to != null) {
+      q = q.lte('date', to.toIso8601String().substring(0, 10));
+    }
     final rows = await q.order('date', ascending: false);
     return rows
         .map<ComplianceLogModel>((r) => ComplianceLogModel.fromJson(r))
@@ -131,8 +143,11 @@ class SupabaseService {
 
   // ---- Streak
   Future<StreakModel?> fetchStreak(String userId) async {
-    final row =
-        await _db.from('streaks').select().eq('user_id', userId).maybeSingle();
+    final row = await _db
+        .from('streaks')
+        .select()
+        .eq('user_id', userId)
+        .maybeSingle();
     return row == null ? null : StreakModel.fromJson(row);
   }
 
@@ -144,7 +159,9 @@ class SupabaseService {
   }) async {
     final path =
         '$userId/${timestamp.toIso8601String().replaceAll(':', '-')}.jpg';
-    await _db.storage.from('verifications').uploadBinary(
+    await _db.storage
+        .from('verifications')
+        .uploadBinary(
           path,
           bytes,
           fileOptions: const FileOptions(contentType: 'image/jpeg'),
@@ -156,7 +173,10 @@ class SupabaseService {
   }
 
   // ---- Realtime
-  RealtimeChannel watchLogs(String userId, void Function(Map<String, dynamic>) onChange) {
+  RealtimeChannel watchLogs(
+    String userId,
+    void Function(Map<String, dynamic>) onChange,
+  ) {
     return _db
         .channel('compliance_logs:$userId')
         .onPostgresChanges(

@@ -67,10 +67,14 @@ class MedBuddyScaffold extends StatelessWidget {
               labelType: NavigationRailLabelType.all,
               backgroundColor: AppColors.surface,
               indicatorColor: AppColors.primary.withValues(alpha: 0.12),
-              selectedIconTheme:
-                  const IconThemeData(color: AppColors.primary, size: 28),
-              unselectedIconTheme:
-                  const IconThemeData(color: AppColors.onSurface, size: 24),
+              selectedIconTheme: const IconThemeData(
+                color: AppColors.primary,
+                size: 28,
+              ),
+              unselectedIconTheme: const IconThemeData(
+                color: AppColors.onSurface,
+                size: 24,
+              ),
               destinations: _destinations
                   .map(
                     (d) => NavigationRailDestination(

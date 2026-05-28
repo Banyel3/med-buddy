@@ -34,8 +34,7 @@ class _OnboardingMedicationScreenState
   }
 
   Future<void> _pickTime() async {
-    final picked =
-        await showTimePicker(context: context, initialTime: _time);
+    final picked = await showTimePicker(context: context, initialTime: _time);
     if (picked != null) setState(() => _time = picked);
   }
 
@@ -95,11 +94,15 @@ class _OnboardingMedicationScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Set up your medication',
-                      style: Theme.of(context).textTheme.headlineLarge),
+                  Text(
+                    'Set up your medication',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
                   const SizedBox(height: AppDimensions.space8),
-                  Text('You can add more later.',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'You can add more later.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   const SizedBox(height: AppDimensions.space24),
                   TextField(
                     controller: _nameCtrl,
@@ -111,8 +114,7 @@ class _OnboardingMedicationScreenState
                   const SizedBox(height: AppDimensions.space16),
                   InkWell(
                     onTap: _pickTime,
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.radiusSm),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                     child: InputDecorator(
                       decoration: const InputDecoration(
                         labelText: 'Reminder time',
@@ -121,10 +123,14 @@ class _OnboardingMedicationScreenState
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(_time.format(context),
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const Icon(Icons.access_time_rounded,
-                              color: AppColors.primary),
+                          Text(
+                            _time.format(context),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Icon(
+                            Icons.access_time_rounded,
+                            color: AppColors.primary,
+                          ),
                         ],
                       ),
                     ),
@@ -139,20 +145,20 @@ class _OnboardingMedicationScreenState
                     items: const [
                       DropdownMenuItem(value: 'Daily', child: Text('Daily')),
                       DropdownMenuItem(
-                          value: 'Weekdays', child: Text('Weekdays')),
-                      DropdownMenuItem(
-                          value: 'Custom', child: Text('Custom')),
+                        value: 'Weekdays',
+                        child: Text('Weekdays'),
+                      ),
+                      DropdownMenuItem(value: 'Custom', child: Text('Custom')),
                     ],
-                    onChanged: (v) =>
-                        setState(() => _frequency = v ?? 'Daily'),
+                    onChanged: (v) => setState(() => _frequency = v ?? 'Daily'),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: AppDimensions.space12),
                     Text(
                       _error!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.error,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: AppColors.error),
                     ),
                   ],
                   const Spacer(),

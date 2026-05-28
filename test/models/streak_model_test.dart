@@ -40,13 +40,13 @@ void main() {
 
   group('milestoneMessage thresholds', () {
     StreakModel of(int days) => StreakModel(
-          id: '',
-          userId: 'u',
-          currentStreak: days,
-          longestStreak: days,
-          lastVerifiedDate: null,
-          updatedAt: DateTime.now(),
-        );
+      id: '',
+      userId: 'u',
+      currentStreak: days,
+      longestStreak: days,
+      lastVerifiedDate: null,
+      updatedAt: DateTime.now(),
+    );
 
     test('0 days returns fresh start copy', () {
       expect(of(0).milestoneMessage, contains('fresh start'));

@@ -36,15 +36,9 @@ class HistoryScreen extends ConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: _MonthlyRing(
-                          rate: _monthRate(logs)),
-                    ),
+                    Expanded(child: _MonthlyRing(rate: _monthRate(logs))),
                     const SizedBox(width: AppDimensions.space20),
-                    Expanded(
-                      flex: 2,
-                      child: _ComplianceCalendar(logs: logs),
-                    ),
+                    Expanded(flex: 2, child: _ComplianceCalendar(logs: logs)),
                   ],
                 ),
               )
@@ -66,10 +60,12 @@ class HistoryScreen extends ConsumerWidget {
   double _monthRate(List<ComplianceLogModel> logs) {
     final now = DateTime.now();
     final monthLogs = logs.where(
-        (l) => l.date.year == now.year && l.date.month == now.month);
+      (l) => l.date.year == now.year && l.date.month == now.month,
+    );
     if (monthLogs.isEmpty) return 0;
-    final verified =
-        monthLogs.where((l) => l.status == ComplianceStatus.verified).length;
+    final verified = monthLogs
+        .where((l) => l.status == ComplianceStatus.verified)
+        .length;
     return verified / monthLogs.length;
   }
 }
@@ -96,23 +92,32 @@ class _StreakHero extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.local_fire_department_rounded,
-              size: 64, color: AppColors.onPrimary),
+          const Icon(
+            Icons.local_fire_department_rounded,
+            size: 64,
+            color: AppColors.onPrimary,
+          ),
           const SizedBox(height: 8),
-          Text('$current',
-              style: Theme.of(context)
-                  .textTheme
-                  .displayLarge
-                  ?.copyWith(color: AppColors.onPrimary, fontSize: 96)),
-          Text('day streak',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(color: AppColors.onPrimary)),
+          Text(
+            '$current',
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
+              color: AppColors.onPrimary,
+              fontSize: 96,
+            ),
+          ),
+          Text(
+            'day streak',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppColors.onPrimary),
+          ),
           const SizedBox(height: 8),
-          Text('Longest: $longest days',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.onPrimary.withValues(alpha: 0.85))),
+          Text(
+            'Longest: $longest days',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.onPrimary.withValues(alpha: 0.85),
+            ),
+          ),
         ],
       ),
     );
@@ -133,8 +138,7 @@ class _MonthlyRing extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('This month',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text('This month', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppDimensions.space16),
           SizedBox(
             width: 140,
@@ -152,14 +156,18 @@ class _MonthlyRing extends StatelessWidget {
                     color: AppColors.secondary,
                   ),
                 ),
-                Text('${(rate * 100).round()}%',
-                    style: Theme.of(context).textTheme.headlineMedium),
+                Text(
+                  '${(rate * 100).round()}%',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
               ],
             ),
           ),
           const SizedBox(height: AppDimensions.space12),
-          Text('Compliance rate',
-              style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            'Compliance rate',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );
@@ -210,8 +218,7 @@ class _ComplianceCalendar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Daily history',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text('Daily history', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppDimensions.space12),
           GridView.builder(
             shrinkWrap: true,
@@ -235,9 +242,10 @@ class _ComplianceCalendar extends StatelessWidget {
                 child: Text(
                   '${day.day}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: day.isAfter(DateTime.now())
-                          ? AppColors.onSurface.withValues(alpha: 0.4)
-                          : AppColors.onSurface),
+                    color: day.isAfter(DateTime.now())
+                        ? AppColors.onSurface.withValues(alpha: 0.4)
+                        : AppColors.onSurface,
+                  ),
                 ),
               );
             },
@@ -250,8 +258,9 @@ class _ComplianceCalendar extends StatelessWidget {
               _LegendDot(color: AppColors.warning, label: 'Late'),
               const SizedBox(width: 12),
               _LegendDot(
-                  color: AppColors.outline.withValues(alpha: 0.5),
-                  label: 'Missed'),
+                color: AppColors.outline.withValues(alpha: 0.5),
+                label: 'Missed',
+              ),
             ],
           ),
         ],
@@ -267,16 +276,19 @@ class _LegendDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                  color: color, borderRadius: BorderRadius.circular(3))),
-          const SizedBox(width: 4),
-          Text(label, style: Theme.of(context).textTheme.labelSmall),
-        ],
-      );
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(3),
+        ),
+      ),
+      const SizedBox(width: 4),
+      Text(label, style: Theme.of(context).textTheme.labelSmall),
+    ],
+  );
 }
 
 class _LogList extends StatelessWidget {
@@ -295,14 +307,15 @@ class _LogList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Recent doses',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text('Recent doses', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppDimensions.space12),
           if (recent.isEmpty)
             Padding(
               padding: const EdgeInsets.all(AppDimensions.space16),
-              child: Text('No doses logged yet — your history will show here.',
-                  style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(
+                'No doses logged yet — your history will show here.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             )
           else
             ...recent.map((l) => _LogRow(log: l)),
@@ -346,25 +359,32 @@ class _LogRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppDateUtils.formatDate(log.date),
-                    style: Theme.of(context).textTheme.bodyLarge),
+                Text(
+                  AppDateUtils.formatDate(log.date),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
                 if (log.verifiedAt != null)
-                  Text(AppDateUtils.formatTime(log.verifiedAt!),
-                      style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    AppDateUtils.formatTime(log.verifiedAt!),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
               ],
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: badgeColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
               border: Border.all(color: badgeColor, width: 1),
             ),
-            child: Text(label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: badgeColor, fontWeight: FontWeight.w700)),
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: badgeColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),

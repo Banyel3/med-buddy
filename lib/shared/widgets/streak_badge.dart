@@ -31,8 +31,11 @@ class StreakBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.local_fire_department_rounded,
-              color: AppColors.onPrimary, size: compact ? 18 : 22),
+          Icon(
+            Icons.local_fire_department_rounded,
+            color: AppColors.onPrimary,
+            size: compact ? 18 : 22,
+          ),
           const SizedBox(width: 6),
           Text(
             '$days day${days == 1 ? '' : 's'}',

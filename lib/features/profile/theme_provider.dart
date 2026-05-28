@@ -26,6 +26,6 @@ class ThemeModeController extends StateNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeController, ThemeMode>(
-        (ref) => ThemeModeController());
+final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
+  (ref) => ThemeModeController(),
+);

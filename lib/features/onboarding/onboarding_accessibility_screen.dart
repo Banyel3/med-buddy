@@ -42,8 +42,7 @@ class _OnboardingAccessibilityScreenState
 
   Future<void> _check() async {
     setState(() => _checking = true);
-    final ok =
-        await ref.read(lockServiceProvider).isAccessibilityEnabled();
+    final ok = await ref.read(lockServiceProvider).isAccessibilityEnabled();
     if (!mounted) return;
     setState(() {
       _enabled = ok;
@@ -77,8 +76,10 @@ class _OnboardingAccessibilityScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Enable lock mode (optional)',
-                      style: Theme.of(context).textTheme.headlineLarge),
+                  Text(
+                    'Enable lock mode (optional)',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
                   const SizedBox(height: AppDimensions.space8),
                   Text(
                     'MedBuddy can lock your phone when you skip a dose. '
@@ -155,8 +156,10 @@ class _PermRow extends StatelessWidget {
             ),
             const SizedBox(width: AppDimensions.space12),
             Expanded(
-              child: Text(title,
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             if (busy)
               const SizedBox(
@@ -168,10 +171,10 @@ class _PermRow extends StatelessWidget {
               Text(
                 granted ? 'Granted' : 'Tap to open',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: granted
-                          ? AppColors.secondary
-                          : AppColors.onSurface.withValues(alpha: 0.6),
-                    ),
+                  color: granted
+                      ? AppColors.secondary
+                      : AppColors.onSurface.withValues(alpha: 0.6),
+                ),
               ),
           ],
         ),

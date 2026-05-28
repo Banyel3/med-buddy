@@ -11,19 +11,28 @@ void main() {
 
   group('ScheduleMath.addMinutes', () {
     test('adds within same hour', () {
-      final t = ScheduleMath.addMinutes(const TimeOfDay(hour: 12, minute: 30), 15);
+      final t = ScheduleMath.addMinutes(
+        const TimeOfDay(hour: 12, minute: 30),
+        15,
+      );
       expect(t.hour, 12);
       expect(t.minute, 45);
     });
 
     test('wraps over the hour', () {
-      final t = ScheduleMath.addMinutes(const TimeOfDay(hour: 12, minute: 55), 30);
+      final t = ScheduleMath.addMinutes(
+        const TimeOfDay(hour: 12, minute: 55),
+        30,
+      );
       expect(t.hour, 13);
       expect(t.minute, 25);
     });
 
     test('wraps across midnight', () {
-      final t = ScheduleMath.addMinutes(const TimeOfDay(hour: 23, minute: 50), 30);
+      final t = ScheduleMath.addMinutes(
+        const TimeOfDay(hour: 23, minute: 50),
+        30,
+      );
       expect(t.hour, 0);
       expect(t.minute, 20);
     });
@@ -36,7 +45,10 @@ void main() {
     });
 
     test('negative minutes wrap backwards', () {
-      final t = ScheduleMath.addMinutes(const TimeOfDay(hour: 0, minute: 10), -20);
+      final t = ScheduleMath.addMinutes(
+        const TimeOfDay(hour: 0, minute: 10),
+        -20,
+      );
       expect(t.hour, 23);
       expect(t.minute, 50);
     });

@@ -32,8 +32,10 @@ class PillDetectionService {
       return true;
     } catch (e) {
       _loadFailed = true;
-      debugPrint('PillDetectionService: model not available ($e). '
-          'Drop pills_detection.tflite into assets/models/ to enable.');
+      debugPrint(
+        'PillDetectionService: model not available ($e). '
+        'Drop pills_detection.tflite into assets/models/ to enable.',
+      );
       return false;
     }
   }
@@ -52,10 +54,12 @@ class PillDetectionService {
   }
 
   double _runInference(img.Image image) {
-    final resized = img.copyResize(image,
-        width: _inputSize,
-        height: _inputSize,
-        interpolation: img.Interpolation.linear);
+    final resized = img.copyResize(
+      image,
+      width: _inputSize,
+      height: _inputSize,
+      interpolation: img.Interpolation.linear,
+    );
 
     // Tight Float32List fill — single allocation, no boxed doubles.
     final flat = Float32List(_inputSize * _inputSize * 3);
@@ -69,10 +73,9 @@ class PillDetectionService {
       }
     }
     final input = flat.reshape([1, _inputSize, _inputSize, 3]);
-    final output =
-        Float32List(1 * (4 + _numClasses) * _numAnchors).reshape(
-      [1, 4 + _numClasses, _numAnchors],
-    );
+    final output = Float32List(
+      1 * (4 + _numClasses) * _numAnchors,
+    ).reshape([1, 4 + _numClasses, _numAnchors]);
 
     _interpreter!.run(input, output);
 

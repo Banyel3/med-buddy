@@ -94,9 +94,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
           .analyzeCapture(file.path);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Capture failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Capture failed: $e')));
     }
   }
 
@@ -112,7 +112,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save — retry or check connection')),
+        const SnackBar(
+          content: Text('Could not save — retry or check connection'),
+        ),
       );
     }
   }
@@ -127,7 +129,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
     if (c == null || !c.value.isInitialized) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: AppColors.onPrimary)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.onPrimary),
+        ),
       );
     }
     return Scaffold(
@@ -182,10 +186,9 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             'Verify your dose',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(color: AppColors.onPrimary),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppColors.onPrimary),
           ),
         ],
       ),
@@ -209,8 +212,9 @@ class _GuideOverlay extends StatelessWidget {
               height: 300,
               decoration: BoxDecoration(
                 border: Border.all(
-                    color: AppColors.onPrimary.withValues(alpha: 0.6),
-                    width: 3),
+                  color: AppColors.onPrimary.withValues(alpha: 0.6),
+                  width: 3,
+                ),
                 borderRadius: BorderRadius.circular(160),
               ),
             ),
@@ -221,10 +225,10 @@ class _GuideOverlay extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 border: Border.all(
-                    color: AppColors.onPrimary.withValues(alpha: 0.6),
-                    width: 2),
-                borderRadius:
-                    BorderRadius.circular(AppDimensions.radiusMd),
+                  color: AppColors.onPrimary.withValues(alpha: 0.6),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               ),
               child: Center(
                 child: Text(
@@ -295,9 +299,10 @@ class _BottomPanel extends StatelessWidget {
             const SizedBox(height: 12),
             if (result.passed)
               const _Hint(
-                  icon: Icons.check_circle_rounded,
-                  color: AppColors.secondary,
-                  text: 'Looks great! Confirm to log this dose.')
+                icon: Icons.check_circle_rounded,
+                color: AppColors.secondary,
+                text: 'Looks great! Confirm to log this dose.',
+              )
             else
               const _Hint(
                 icon: Icons.refresh_rounded,
@@ -309,12 +314,13 @@ class _BottomPanel extends StatelessWidget {
           if (analyzing) ...[
             const LinearProgressIndicator(color: AppColors.accent),
             const SizedBox(height: 12),
-            Text('Analyzing…',
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppColors.onPrimary)),
+            Text(
+              'Analyzing…',
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+            ),
           ] else if (result == null) ...[
             PrimaryButton(
               label: 'Capture',
@@ -390,17 +396,20 @@ class _ConfidenceBar extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(label,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: AppColors.onPrimary)),
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: AppColors.onPrimary),
+            ),
             const Spacer(),
-            Text('${(value * 100).toStringAsFixed(0)}%',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: color, fontWeight: FontWeight.w700)),
+            Text(
+              '${(value * 100).toStringAsFixed(0)}%',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -431,11 +440,12 @@ class _Hint extends StatelessWidget {
         Icon(icon, color: color, size: 20),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppColors.onPrimary)),
+          child: Text(
+            text,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.onPrimary),
+          ),
         ),
       ],
     );
@@ -457,23 +467,26 @@ class _PermissionDenied extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.no_photography_rounded,
-                    color: AppColors.onPrimary, size: 72),
+                const Icon(
+                  Icons.no_photography_rounded,
+                  color: AppColors.onPrimary,
+                  size: 72,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Camera permission needed',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.onPrimary,
-                      ),
+                    color: AppColors.onPrimary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'MedBuddy uses the camera to verify your dose. Grant access to continue.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.onPrimary.withValues(alpha: 0.75),
-                      ),
+                    color: AppColors.onPrimary.withValues(alpha: 0.75),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 PrimaryButton(
@@ -484,8 +497,10 @@ class _PermissionDenied extends StatelessWidget {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: onRetry,
-                  child: const Text('Retry',
-                      style: TextStyle(color: AppColors.onPrimary)),
+                  child: const Text(
+                    'Retry',
+                    style: TextStyle(color: AppColors.onPrimary),
+                  ),
                 ),
               ],
             ),
@@ -495,4 +510,3 @@ class _PermissionDenied extends StatelessWidget {
     );
   }
 }
-

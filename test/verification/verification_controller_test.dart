@@ -64,14 +64,16 @@ ProviderContainer _container({
   required AccessibilityLockService lock,
   User? user,
 }) {
-  final c = ProviderContainer(overrides: [
-    faceDetectionServiceProvider.overrideWithValue(face),
-    pillDetectionServiceProvider.overrideWithValue(pill),
-    supabaseServiceProvider.overrideWithValue(supabase),
-    lockServiceProvider.overrideWithValue(lock),
-    currentSupabaseUserProvider.overrideWith((ref) => user),
-    nextMedicationProvider.overrideWith((ref) => null),
-  ]);
+  final c = ProviderContainer(
+    overrides: [
+      faceDetectionServiceProvider.overrideWithValue(face),
+      pillDetectionServiceProvider.overrideWithValue(pill),
+      supabaseServiceProvider.overrideWithValue(supabase),
+      lockServiceProvider.overrideWithValue(lock),
+      currentSupabaseUserProvider.overrideWith((ref) => user),
+      nextMedicationProvider.overrideWith((ref) => null),
+    ],
+  );
   // Keep the autoDispose controller alive for the duration of the test.
   c.listen(verificationControllerProvider, (_, _) {}, fireImmediately: true);
   return c;
@@ -79,20 +81,21 @@ ProviderContainer _container({
 
 void main() {
   setUpAll(() {
-    registerFallbackValue(ComplianceLogModel(
-      id: '',
-      medicationId: '',
-      userId: 'u',
-      date: DateTime(2026, 5, 24),
-      status: ComplianceStatus.verified,
-    ));
+    registerFallbackValue(
+      ComplianceLogModel(
+        id: '',
+        medicationId: '',
+        userId: 'u',
+        date: DateTime(2026, 5, 24),
+        status: ComplianceStatus.verified,
+      ),
+    );
     registerFallbackValue(Uint8List(0));
     registerFallbackValue(DateTime(2026, 5, 24));
   });
 
   group('VerificationController.analyzeCapture', () {
-    test('marks passed=true when both confidences clear thresholds',
-        () async {
+    test('marks passed=true when both confidences clear thresholds', () async {
       final supa = _MockSupabaseService();
       final lock = _MockLockService();
       final c = _container(
@@ -123,15 +126,18 @@ void main() {
       );
       addTearDown(c.dispose);
       // Stub writeLog so the fire-and-forget late-attempt call succeeds.
-      when(() => (c.read(supabaseServiceProvider) as _MockSupabaseService)
-              .writeLog(any()))
-          .thenAnswer((_) async => ComplianceLogModel(
-                id: 'x',
-                medicationId: '',
-                userId: 'user-1',
-                date: DateTime(2026, 5, 24),
-                status: ComplianceStatus.late,
-              ));
+      when(
+        () => (c.read(supabaseServiceProvider) as _MockSupabaseService)
+            .writeLog(any()),
+      ).thenAnswer(
+        (_) async => ComplianceLogModel(
+          id: 'x',
+          medicationId: '',
+          userId: 'user-1',
+          date: DateTime(2026, 5, 24),
+          status: ComplianceStatus.late,
+        ),
+      );
       final ctrl = c.read(verificationControllerProvider.notifier);
       await ctrl.analyzeCapture('/tmp/nonexistent.jpg');
       final state = c.read(verificationControllerProvider);
@@ -147,19 +153,21 @@ void main() {
         user: _FakeUser(),
       );
       addTearDown(c.dispose);
-      when(() => (c.read(supabaseServiceProvider) as _MockSupabaseService)
-              .writeLog(any()))
-          .thenAnswer((_) async => ComplianceLogModel(
-                id: 'x',
-                medicationId: '',
-                userId: 'user-1',
-                date: DateTime(2026, 5, 24),
-                status: ComplianceStatus.late,
-              ));
+      when(
+        () => (c.read(supabaseServiceProvider) as _MockSupabaseService)
+            .writeLog(any()),
+      ).thenAnswer(
+        (_) async => ComplianceLogModel(
+          id: 'x',
+          medicationId: '',
+          userId: 'user-1',
+          date: DateTime(2026, 5, 24),
+          status: ComplianceStatus.late,
+        ),
+      );
       final ctrl = c.read(verificationControllerProvider.notifier);
       await ctrl.analyzeCapture('/tmp/nonexistent.jpg');
-      expect(
-          c.read(verificationControllerProvider).lastResult!.passed, false);
+      expect(c.read(verificationControllerProvider).lastResult!.passed, false);
     });
 
     test('exact threshold values pass', () async {
@@ -173,8 +181,7 @@ void main() {
       addTearDown(c.dispose);
       final ctrl = c.read(verificationControllerProvider.notifier);
       await ctrl.analyzeCapture('/tmp/x.jpg');
-      expect(
-          c.read(verificationControllerProvider).lastResult!.passed, true);
+      expect(c.read(verificationControllerProvider).lastResult!.passed, true);
     });
   });
 
@@ -204,66 +211,82 @@ void main() {
       );
       addTearDown(c.dispose);
       // Stub late-attempt log to avoid noise.
-      when(() => (c.read(supabaseServiceProvider) as _MockSupabaseService)
-              .writeLog(any()))
-          .thenAnswer((_) async => ComplianceLogModel(
-                id: 'x',
-                medicationId: '',
-                userId: 'user-1',
-                date: DateTime(2026, 5, 24),
-                status: ComplianceStatus.late,
-              ));
+      when(
+        () => (c.read(supabaseServiceProvider) as _MockSupabaseService)
+            .writeLog(any()),
+      ).thenAnswer(
+        (_) async => ComplianceLogModel(
+          id: 'x',
+          medicationId: '',
+          userId: 'user-1',
+          date: DateTime(2026, 5, 24),
+          status: ComplianceStatus.late,
+        ),
+      );
       final ctrl = c.read(verificationControllerProvider.notifier);
       await ctrl.analyzeCapture('/tmp/x.jpg');
       final ok = await ctrl.confirmDose();
       expect(ok, false);
     });
 
-    test('uploads bytes + writes verified log + deactivates lock on success',
-        () async {
-      final supa = _MockSupabaseService();
-      final lock = _MockLockService();
-      final tmp = await File(
-              '${Directory.systemTemp.createTempSync('vc').path}/cap.jpg')
-          .writeAsBytes(List<int>.filled(8, 0xFF));
-      when(() => supa.uploadVerificationPhoto(
+    test(
+      'uploads bytes + writes verified log + deactivates lock on success',
+      () async {
+        final supa = _MockSupabaseService();
+        final lock = _MockLockService();
+        final tmp = await File(
+          '${Directory.systemTemp.createTempSync('vc').path}/cap.jpg',
+        ).writeAsBytes(List<int>.filled(8, 0xFF));
+        when(
+          () => supa.uploadVerificationPhoto(
             userId: any(named: 'userId'),
             bytes: any(named: 'bytes'),
             timestamp: any(named: 'timestamp'),
-          )).thenAnswer((_) async => 'https://signed.example/url');
-      when(() => supa.writeLog(any())).thenAnswer(
-        (_) async => ComplianceLogModel(
-          id: 'log-1',
-          medicationId: '',
-          userId: 'user-1',
-          date: DateTime(2026, 5, 24),
-          status: ComplianceStatus.verified,
-        ),
-      );
-      when(() => lock.deactivate()).thenAnswer((_) async => true);
+          ),
+        ).thenAnswer((_) async => 'https://signed.example/url');
+        when(() => supa.writeLog(any())).thenAnswer(
+          (_) async => ComplianceLogModel(
+            id: 'log-1',
+            medicationId: '',
+            userId: 'user-1',
+            date: DateTime(2026, 5, 24),
+            status: ComplianceStatus.verified,
+          ),
+        );
+        when(() => lock.deactivate()).thenAnswer((_) async => true);
 
-      final c = _container(
-        face: _FakeFace(0.95),
-        pill: _FakePill(0.85),
-        supabase: supa,
-        lock: lock,
-        user: _FakeUser(),
-      );
-      addTearDown(c.dispose);
-      final ctrl = c.read(verificationControllerProvider.notifier);
-      await ctrl.analyzeCapture(tmp.path);
-      final ok = await ctrl.confirmDose();
-      expect(ok, true);
+        final c = _container(
+          face: _FakeFace(0.95),
+          pill: _FakePill(0.85),
+          supabase: supa,
+          lock: lock,
+          user: _FakeUser(),
+        );
+        addTearDown(c.dispose);
+        final ctrl = c.read(verificationControllerProvider.notifier);
+        await ctrl.analyzeCapture(tmp.path);
+        final ok = await ctrl.confirmDose();
+        expect(ok, true);
 
-      verify(() => supa.uploadVerificationPhoto(
+        verify(
+          () => supa.uploadVerificationPhoto(
             userId: 'user-1',
             bytes: any(named: 'bytes'),
             timestamp: any(named: 'timestamp'),
-          )).called(1);
-      verify(() => supa.writeLog(any(that: predicate<ComplianceLogModel>(
-              (log) => log.status == ComplianceStatus.verified)))).called(1);
-      verify(() => lock.deactivate()).called(1);
-    });
+          ),
+        ).called(1);
+        verify(
+          () => supa.writeLog(
+            any(
+              that: predicate<ComplianceLogModel>(
+                (log) => log.status == ComplianceStatus.verified,
+              ),
+            ),
+          ),
+        ).called(1);
+        verify(() => lock.deactivate()).called(1);
+      },
+    );
   });
 
   group('VerificationController.resetForRetake', () {

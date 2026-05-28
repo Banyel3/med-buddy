@@ -49,13 +49,12 @@ class VerificationState {
     String? error,
     bool clearResult = false,
     bool clearError = false,
-  }) =>
-      VerificationState(
-        analyzing: analyzing ?? this.analyzing,
-        submitting: submitting ?? this.submitting,
-        lastResult: clearResult ? null : (lastResult ?? this.lastResult),
-        error: clearError ? null : (error ?? this.error),
-      );
+  }) => VerificationState(
+    analyzing: analyzing ?? this.analyzing,
+    submitting: submitting ?? this.submitting,
+    lastResult: clearResult ? null : (lastResult ?? this.lastResult),
+    error: clearError ? null : (error ?? this.error),
+  );
 }
 
 class VerificationController extends StateNotifier<VerificationState> {
@@ -63,9 +62,9 @@ class VerificationController extends StateNotifier<VerificationState> {
     this._ref, {
     required FaceDetectionService face,
     required PillDetectionService pill,
-  })  : _face = face,
-        _pill = pill,
-        super(const VerificationState());
+  }) : _face = face,
+       _pill = pill,
+       super(const VerificationState());
 
   final Ref _ref;
   final FaceDetectionService _face;
@@ -73,7 +72,10 @@ class VerificationController extends StateNotifier<VerificationState> {
 
   Future<void> analyzeCapture(String filePath) async {
     state = state.copyWith(
-        analyzing: true, clearError: true, clearResult: true);
+      analyzing: true,
+      clearError: true,
+      clearResult: true,
+    );
     try {
       final results = await Future.wait([
         _face.detectFromFile(filePath),
@@ -81,7 +83,8 @@ class VerificationController extends StateNotifier<VerificationState> {
       ]);
       final faceConf = results[0];
       final pillConf = results[1];
-      final passed = faceConf >= VerificationResult.faceThreshold &&
+      final passed =
+          faceConf >= VerificationResult.faceThreshold &&
           pillConf >= VerificationResult.pillThreshold;
       state = state.copyWith(
         analyzing: false,
@@ -109,7 +112,9 @@ class VerificationController extends StateNotifier<VerificationState> {
       if (user == null) return;
       final med = _ref.read(nextMedicationProvider);
       final now = DateTime.now();
-      await _ref.read(supabaseServiceProvider).writeLog(
+      await _ref
+          .read(supabaseServiceProvider)
+          .writeLog(
             ComplianceLogModel(
               id: '',
               medicationId: med?.id ?? '',
@@ -181,16 +186,22 @@ class VerificationController extends StateNotifier<VerificationState> {
   }
 }
 
-final faceDetectionServiceProvider =
-    Provider<FaceDetectionService>((ref) => FaceDetectionService());
+final faceDetectionServiceProvider = Provider<FaceDetectionService>(
+  (ref) => FaceDetectionService(),
+);
 
-final pillDetectionServiceProvider =
-    Provider<PillDetectionService>((ref) => PillDetectionService());
+final pillDetectionServiceProvider = Provider<PillDetectionService>(
+  (ref) => PillDetectionService(),
+);
 
 final verificationControllerProvider =
-    StateNotifierProvider.autoDispose<VerificationController, VerificationState>(
-        (ref) => VerificationController(
-              ref,
-              face: ref.read(faceDetectionServiceProvider),
-              pill: ref.read(pillDetectionServiceProvider),
-            ));
+    StateNotifierProvider.autoDispose<
+      VerificationController,
+      VerificationState
+    >(
+      (ref) => VerificationController(
+        ref,
+        face: ref.read(faceDetectionServiceProvider),
+        pill: ref.read(pillDetectionServiceProvider),
+      ),
+    );

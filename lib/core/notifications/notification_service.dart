@@ -41,13 +41,16 @@ class NotificationService {
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-          _channelId,
-          _channelName,
-          description: _channelDesc,
-          importance: Importance.high,
-        ));
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _channelId,
+            _channelName,
+            description: _channelDesc,
+            importance: Importance.high,
+          ),
+        );
 
     _initialized = true;
   }
@@ -55,21 +58,22 @@ class NotificationService {
   Future<void> requestPermissions() async {
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
   }
 
   NotificationDetails get _details => const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDesc,
-          importance: Importance.high,
-          priority: Priority.high,
-          fullScreenIntent: true,
-        ),
-        iOS: DarwinNotificationDetails(),
-      );
+    android: AndroidNotificationDetails(
+      _channelId,
+      _channelName,
+      channelDescription: _channelDesc,
+      importance: Importance.high,
+      priority: Priority.high,
+      fullScreenIntent: true,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
 
   static void _onNotificationResponse(NotificationResponse response) {
     if (response.payload == 'lock-activate') {
@@ -99,8 +103,7 @@ class NotificationService {
       escalationNotificationId,
       'Still waiting on you 👀',
       "Take $medName when you're ready.",
-      ScheduleMath.nextInstanceOf(
-          ScheduleMath.addMinutes(time, 15), tz.local),
+      ScheduleMath.nextInstanceOf(ScheduleMath.addMinutes(time, 15), tz.local),
       _details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
@@ -112,8 +115,7 @@ class NotificationService {
       lockNotificationId,
       'Phone locking now 🔒',
       'Verify your dose to unlock your phone.',
-      ScheduleMath.nextInstanceOf(
-          ScheduleMath.addMinutes(time, 30), tz.local),
+      ScheduleMath.nextInstanceOf(ScheduleMath.addMinutes(time, 30), tz.local),
       _details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
@@ -138,9 +140,13 @@ class NotificationService {
       final base = med.id.hashCode & 0x7FFFFFFF; // positive 31-bit
       final remindAt = ScheduleMath.nextInstanceOf(med.scheduleTime, tz.local);
       final escalateAt = ScheduleMath.nextInstanceOf(
-          ScheduleMath.addMinutes(med.scheduleTime, 15), tz.local);
+        ScheduleMath.addMinutes(med.scheduleTime, 15),
+        tz.local,
+      );
       final lockAt = ScheduleMath.nextInstanceOf(
-          ScheduleMath.addMinutes(med.scheduleTime, 30), tz.local);
+        ScheduleMath.addMinutes(med.scheduleTime, 30),
+        tz.local,
+      );
 
       await _plugin.zonedSchedule(
         base + 0,
@@ -195,7 +201,4 @@ class NotificationService {
   }
 
   Future<void> cancelAll() => _plugin.cancelAll();
-
 }
-
-

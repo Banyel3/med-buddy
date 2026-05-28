@@ -4,17 +4,29 @@ import 'package:medbuddy/shared/models/compliance_log_model.dart';
 void main() {
   group('ComplianceLogModel.fromJson status parsing', () {
     ComplianceLogModel parse(String status) => ComplianceLogModel.fromJson({
-          'medication_id': 'm',
-          'user_id': 'u',
-          'date': '2026-05-24',
-          'status': status,
-        });
+      'medication_id': 'm',
+      'user_id': 'u',
+      'date': '2026-05-24',
+      'status': status,
+    });
 
-    test('verified', () => expect(parse('verified').status, ComplianceStatus.verified));
+    test(
+      'verified',
+      () => expect(parse('verified').status, ComplianceStatus.verified),
+    );
     test('late', () => expect(parse('late').status, ComplianceStatus.late));
-    test('missed', () => expect(parse('missed').status, ComplianceStatus.missed));
-    test('pending', () => expect(parse('pending').status, ComplianceStatus.pending));
-    test('unknown → pending', () => expect(parse('garbage').status, ComplianceStatus.pending));
+    test(
+      'missed',
+      () => expect(parse('missed').status, ComplianceStatus.missed),
+    );
+    test(
+      'pending',
+      () => expect(parse('pending').status, ComplianceStatus.pending),
+    );
+    test(
+      'unknown → pending',
+      () => expect(parse('garbage').status, ComplianceStatus.pending),
+    );
     test('null → pending', () {
       final log = ComplianceLogModel.fromJson({
         'medication_id': 'm',

@@ -21,8 +21,10 @@ class LockModeEnv {
   /// Compile-time flag. Provide via:
   ///   flutter run --dart-define=MEDBUDDY_LOCK_MODE=soft
   ///   flutter build apk --dart-define=MEDBUDDY_LOCK_MODE=hard
-  static const String _dartDefine =
-      String.fromEnvironment('MEDBUDDY_LOCK_MODE', defaultValue: '');
+  static const String _dartDefine = String.fromEnvironment(
+    'MEDBUDDY_LOCK_MODE',
+    defaultValue: '',
+  );
 
   /// Returns the build-or-env-forced mode, or null if neither is set.
   static LockMode? resolve() {
@@ -87,6 +89,6 @@ class LockModeController extends StateNotifier<LockMode> {
   }
 }
 
-final lockModeProvider =
-    StateNotifierProvider<LockModeController, LockMode>(
-        (ref) => LockModeController());
+final lockModeProvider = StateNotifierProvider<LockModeController, LockMode>(
+  (ref) => LockModeController(),
+);

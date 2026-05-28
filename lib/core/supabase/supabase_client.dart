@@ -12,8 +12,10 @@ class SupabaseBootstrap {
     if (url.isEmpty || anon.isEmpty || url.contains('placeholder')) {
       // Soft-init so the app still boots in pre-config dev. Auth/db will no-op.
       // ignore: avoid_print
-      print('[SupabaseBootstrap] WARN: .env missing real credentials — '
-          'using placeholder. Fill .env to enable backend.');
+      print(
+        '[SupabaseBootstrap] WARN: .env missing real credentials — '
+        'using placeholder. Fill .env to enable backend.',
+      );
     }
 
     await Supabase.initialize(

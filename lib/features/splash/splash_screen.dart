@@ -39,8 +39,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.medical_services_rounded,
-                color: AppColors.onPrimary, size: 72),
+            Icon(
+              Icons.medical_services_rounded,
+              color: AppColors.onPrimary,
+              size: 72,
+            ),
             SizedBox(height: 12),
             Text(
               'MedBuddy',

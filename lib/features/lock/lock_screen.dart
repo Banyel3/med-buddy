@@ -68,43 +68,41 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.medication_liquid_rounded,
-                          size: 128, color: AppColors.onPrimary),
+                      const Icon(
+                        Icons.medication_liquid_rounded,
+                        size: 128,
+                        color: AppColors.onPrimary,
+                      ),
                       const SizedBox(height: AppDimensions.space24),
                       Text(
                         "Hey! Don't forget your meds today 💊",
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(color: AppColors.onPrimary),
                       ),
                       const SizedBox(height: AppDimensions.space12),
                       Text(
                         'Pop in for a quick verify — takes 30 seconds.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(
-                                color: AppColors.onPrimary
-                                    .withValues(alpha: 0.85)),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppColors.onPrimary.withValues(alpha: 0.85),
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.space16),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color:
-                              AppColors.onPrimary.withValues(alpha: 0.18),
+                          color: AppColors.onPrimary.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusFull),
+                            AppDimensions.radiusFull,
+                          ),
                         ),
                         child: Text(
                           'Locked for ${_fmt(_elapsed)}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelLarge
+                          style: Theme.of(context).textTheme.labelLarge
                               ?.copyWith(color: AppColors.onPrimary),
                         ),
                       ),
@@ -113,8 +111,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         label: 'Take it now',
                         icon: Icons.camera_alt_rounded,
                         gradient: false,
-                        onPressed: () =>
-                            context.goNamed(AppRoute.verification),
+                        onPressed: () => context.goNamed(AppRoute.verification),
                       ),
                     ],
                   ),

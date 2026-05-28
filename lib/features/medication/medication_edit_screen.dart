@@ -85,10 +85,9 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.medication?.name ?? '');
-    _notesCtrl =
-        TextEditingController(text: widget.medication?.notes ?? '');
-    _time = widget.medication?.scheduleTime ??
-        const TimeOfDay(hour: 9, minute: 0);
+    _notesCtrl = TextEditingController(text: widget.medication?.notes ?? '');
+    _time =
+        widget.medication?.scheduleTime ?? const TimeOfDay(hour: 9, minute: 0);
   }
 
   @override
@@ -99,8 +98,7 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
   }
 
   Future<void> _pickTime() async {
-    final picked =
-        await showTimePicker(context: context, initialTime: _time);
+    final picked = await showTimePicker(context: context, initialTime: _time);
     if (picked != null) setState(() => _time = picked);
   }
 
@@ -111,20 +109,24 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
       return;
     }
     if (name.length > _kMaxNameLength) {
-      setState(() => _error =
-          'Medication name must be $_kMaxNameLength characters or fewer.');
+      setState(
+        () => _error =
+            'Medication name must be $_kMaxNameLength characters or fewer.',
+      );
       return;
     }
     final notes = _notesCtrl.text.trim();
     if (notes.length > _kMaxNotesLength) {
-      setState(() =>
-          _error = 'Notes must be $_kMaxNotesLength characters or fewer.');
+      setState(
+        () => _error = 'Notes must be $_kMaxNotesLength characters or fewer.',
+      );
       return;
     }
     if (!_isEdit) {
       // Create path is handled by the onboarding flow.
-      setState(() => _error =
-          'New medications are added during onboarding for now.');
+      setState(
+        () => _error = 'New medications are added during onboarding for now.',
+      );
       return;
     }
     setState(() {
@@ -163,7 +165,8 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Remove medication?'),
         content: Text(
-            '${med.name} will stop appearing on Home. Past doses stay in your history.'),
+          '${med.name} will stop appearing on Home. Past doses stay in your history.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -207,8 +210,10 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
         actions: [
           if (_isEdit)
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded,
-                  color: AppColors.error),
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.error,
+              ),
               onPressed: _busy ? null : _delete,
               tooltip: 'Remove',
             ),
@@ -239,8 +244,7 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
                   const SizedBox(height: AppDimensions.space16),
                   InkWell(
                     onTap: _pickTime,
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.radiusSm),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                     child: InputDecorator(
                       decoration: const InputDecoration(
                         labelText: 'Reminder time',
@@ -249,10 +253,14 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(_time.format(context),
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const Icon(Icons.access_time_rounded,
-                              color: AppColors.primary),
+                          Text(
+                            _time.format(context),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Icon(
+                            Icons.access_time_rounded,
+                            color: AppColors.primary,
+                          ),
                         ],
                       ),
                     ),
@@ -276,9 +284,9 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
                     const SizedBox(height: AppDimensions.space12),
                     Text(
                       _error!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.error,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: AppColors.error),
                     ),
                   ],
                   const Spacer(),

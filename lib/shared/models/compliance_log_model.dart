@@ -39,16 +39,16 @@ class ComplianceLogModel {
       );
 
   Map<String, dynamic> toJson() => {
-        if (id.isNotEmpty) 'id': id,
-        'medication_id': medicationId,
-        'user_id': userId,
-        'date': date.toIso8601String().substring(0, 10),
-        'status': status.name,
-        if (imageUrl != null) 'image_url': imageUrl,
-        if (verifiedAt != null) 'verified_at': verifiedAt!.toIso8601String(),
-        if (faceConfidence != null) 'face_confidence': faceConfidence,
-        if (pillConfidence != null) 'pill_confidence': pillConfidence,
-      };
+    if (id.isNotEmpty) 'id': id,
+    'medication_id': medicationId,
+    'user_id': userId,
+    'date': date.toIso8601String().substring(0, 10),
+    'status': status.name,
+    if (imageUrl != null) 'image_url': imageUrl,
+    if (verifiedAt != null) 'verified_at': verifiedAt!.toIso8601String(),
+    if (faceConfidence != null) 'face_confidence': faceConfidence,
+    if (pillConfidence != null) 'pill_confidence': pillConfidence,
+  };
 
   static ComplianceStatus _parseStatus(String? value) {
     switch (value) {

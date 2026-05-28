@@ -25,10 +25,7 @@ void main() {
         1,
       );
       expect(
-        AppDateUtils.daysBetween(
-          DateTime(2026, 5, 1),
-          DateTime(2026, 5, 31),
-        ),
+        AppDateUtils.daysBetween(DateTime(2026, 5, 1), DateTime(2026, 5, 31)),
         30,
       );
     });

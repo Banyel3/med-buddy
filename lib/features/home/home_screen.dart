@@ -42,7 +42,9 @@ class HomeScreen extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: _StreakCard(streak: streak?.currentStreak ?? 0)),
+                      Expanded(
+                        child: _StreakCard(streak: streak?.currentStreak ?? 0),
+                      ),
                       const SizedBox(width: AppDimensions.space20),
                       Expanded(child: _AdherenceCard(stats: adherence)),
                     ],
@@ -90,19 +92,22 @@ class _Greeting extends StatelessWidget {
     final greeting = hour < 12
         ? 'Good morning'
         : hour < 18
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$greeting, $name 👋',
-            style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          '$greeting, $name 👋',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         const SizedBox(height: 4),
-        Text(AppDateUtils.formatDate(DateTime.now()),
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.onSurface.withValues(alpha: 0.6))),
+        Text(
+          AppDateUtils.formatDate(DateTime.now()),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
       ],
     );
   }
@@ -129,24 +134,29 @@ class _StreakCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_fire_department_rounded,
-              size: 42, color: AppColors.onPrimary),
+          const Icon(
+            Icons.local_fire_department_rounded,
+            size: 42,
+            color: AppColors.onPrimary,
+          ),
           const SizedBox(width: AppDimensions.space16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Current streak',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppColors.onPrimary.withValues(alpha: 0.85),
-                        )),
+                Text(
+                  'Current streak',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: AppColors.onPrimary.withValues(alpha: 0.85),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '$streak day${streak == 1 ? '' : 's'}',
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: AppColors.onPrimary,
-                        fontWeight: FontWeight.w900,
-                      ),
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -189,13 +199,17 @@ class _MedError extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Couldn't load your medications",
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            "Couldn't load your medications",
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
-          Text(message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.error,
-                  )),
+          Text(
+            message,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+          ),
         ],
       ),
     );
@@ -210,8 +224,11 @@ class _AdherenceStats {
 
   factory _AdherenceStats.fromLogs(List<ComplianceLogModel> logs) {
     final now = DateTime.now();
-    final cutoff = DateTime(now.year, now.month, now.day)
-        .subtract(const Duration(days: 6));
+    final cutoff = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 6));
     var verified = 0;
     var total = 0;
     for (final log in logs) {
@@ -247,8 +264,10 @@ class _AdherenceCard extends StatelessWidget {
             children: [
               const Icon(Icons.bar_chart_rounded, color: AppColors.secondary),
               const SizedBox(width: 8),
-              Text('Last 7 days',
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Last 7 days',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ],
           ),
           const SizedBox(height: AppDimensions.space12),
@@ -297,11 +316,16 @@ class _NoMedsCta extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.medical_information_rounded,
-              color: AppColors.primary, size: 32),
+          const Icon(
+            Icons.medical_information_rounded,
+            color: AppColors.primary,
+            size: 32,
+          ),
           const SizedBox(height: AppDimensions.space8),
-          Text('No medications yet',
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'No medications yet',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 4),
           Text(
             'Add your first medication to start a streak.',
@@ -356,26 +380,37 @@ class _MedicationCard extends StatelessWidget {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                       ),
-                      child: const Icon(Icons.medication_rounded,
-                          color: AppColors.primary, size: 28),
+                      child: const Icon(
+                        Icons.medication_rounded,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
                     ),
                     const SizedBox(width: AppDimensions.space12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title,
-                              style: Theme.of(context).textTheme.titleLarge),
-                          Text('Today at $time',
-                              style: Theme.of(context).textTheme.bodyMedium),
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Text(
+                            'Today at $time',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.edit_outlined,
-                        color: AppColors.outline, size: 20),
+                    const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.outline,
+                      size: 20,
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppDimensions.space20),

@@ -28,7 +28,8 @@ void main() {
   testWidgets('compact mode renders smaller icon', (tester) async {
     await tester.pumpWidget(wrap(const StreakBadge(days: 3, compact: true)));
     final icon = tester.widget<Icon>(
-        find.byIcon(Icons.local_fire_department_rounded));
+      find.byIcon(Icons.local_fire_department_rounded),
+    );
     expect(icon.size, 18);
   });
 }

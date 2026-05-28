@@ -44,8 +44,13 @@ class FaceDetectionService {
       if (input == null) return 0.0;
       final faces = await _detector.processImage(input);
       if (faces.isEmpty) return 0.0;
-      return _scoreFromFaces(faces,
-          fallbackImageSize: Size(image.width.toDouble(), image.height.toDouble()));
+      return _scoreFromFaces(
+        faces,
+        fallbackImageSize: Size(
+          image.width.toDouble(),
+          image.height.toDouble(),
+        ),
+      );
     } catch (e) {
       debugPrint('FaceDetectionService.detectFromCameraImage error: $e');
       return 0.0;
@@ -59,8 +64,9 @@ class FaceDetectionService {
     final frameArea = fallbackImageSize == null
         ? null
         : fallbackImageSize.width * fallbackImageSize.height;
-    final coverageRatio =
-        (frameArea == null || frameArea == 0) ? 0.25 : faceArea / frameArea;
+    final coverageRatio = (frameArea == null || frameArea == 0)
+        ? 0.25
+        : faceArea / frameArea;
 
     // Smile / open-eye signals bump score (model is more confident on
     // engaged faces). All optional — fall back to coverage-only.
@@ -81,10 +87,11 @@ class FaceDetectionService {
       buffer.putUint8List(p.bytes);
     }
     final bytes = buffer.done().buffer.asUint8List();
-    final rotation = InputImageRotationValue.fromRawValue(
-            camera.sensorOrientation) ??
+    final rotation =
+        InputImageRotationValue.fromRawValue(camera.sensorOrientation) ??
         InputImageRotation.rotation0deg;
-    final format = InputImageFormatValue.fromRawValue(image.format.raw) ??
+    final format =
+        InputImageFormatValue.fromRawValue(image.format.raw) ??
         InputImageFormat.nv21;
     return InputImage.fromBytes(
       bytes: bytes,

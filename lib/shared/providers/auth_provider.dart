@@ -25,8 +25,10 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> signIn(String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      await SupabaseBootstrap.client.auth
-          .signInWithPassword(email: email, password: password);
+      await SupabaseBootstrap.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -37,8 +39,10 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> signUp(String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      await SupabaseBootstrap.client.auth
-          .signUp(email: email, password: password);
+      await SupabaseBootstrap.client.auth.signUp(
+        email: email,
+        password: password,
+      );
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -53,4 +57,5 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AsyncValue<void>>(
-        (ref) => AuthController());
+      (ref) => AuthController(),
+    );

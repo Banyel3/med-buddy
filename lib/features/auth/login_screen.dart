@@ -41,9 +41,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context.goNamed(AppRoute.onboardingWelcome);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Auth failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Auth failed: $e')));
     }
   }
 
@@ -64,8 +64,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.medical_services_rounded,
-                        size: 64, color: AppColors.primary),
+                    const Icon(
+                      Icons.medical_services_rounded,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(height: AppDimensions.space16),
                     Text(
                       _isSignUp ? 'Create account' : 'Welcome back',
@@ -89,8 +92,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         labelText: 'Email',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          (v == null || !v.contains('@')) ? 'Enter email' : null,
+                      validator: (v) => (v == null || !v.contains('@'))
+                          ? 'Enter email'
+                          : null,
                     ),
                     const SizedBox(height: AppDimensions.space16),
                     TextFormField(
@@ -112,9 +116,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: AppDimensions.space16),
                     TextButton(
                       onPressed: () => setState(() => _isSignUp = !_isSignUp),
-                      child: Text(_isSignUp
-                          ? 'Have an account? Sign in'
-                          : 'New here? Create an account'),
+                      child: Text(
+                        _isSignUp
+                            ? 'Have an account? Sign in'
+                            : 'New here? Create an account',
+                      ),
                     ),
                   ],
                 ),

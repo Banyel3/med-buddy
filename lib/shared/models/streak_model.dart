@@ -16,36 +16,39 @@ class StreakModel {
   });
 
   factory StreakModel.empty(String userId) => StreakModel(
-        id: '',
-        userId: userId,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastVerifiedDate: null,
-        updatedAt: DateTime.now(),
-      );
+    id: '',
+    userId: userId,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastVerifiedDate: null,
+    updatedAt: DateTime.now(),
+  );
 
   factory StreakModel.fromJson(Map<String, dynamic> json) => StreakModel(
-        id: (json['id'] as String?) ?? '',
-        userId: json['user_id'] as String,
-        currentStreak: (json['current_streak'] as int?) ?? 0,
-        longestStreak: (json['longest_streak'] as int?) ?? 0,
-        lastVerifiedDate: json['last_verified_date'] == null
-            ? null
-            : DateTime.parse(json['last_verified_date'] as String),
-        updatedAt: DateTime.parse(json['updated_at'] as String? ??
-            DateTime.now().toIso8601String()),
-      );
+    id: (json['id'] as String?) ?? '',
+    userId: json['user_id'] as String,
+    currentStreak: (json['current_streak'] as int?) ?? 0,
+    longestStreak: (json['longest_streak'] as int?) ?? 0,
+    lastVerifiedDate: json['last_verified_date'] == null
+        ? null
+        : DateTime.parse(json['last_verified_date'] as String),
+    updatedAt: DateTime.parse(
+      json['updated_at'] as String? ?? DateTime.now().toIso8601String(),
+    ),
+  );
 
   Map<String, dynamic> toJson() => {
-        if (id.isNotEmpty) 'id': id,
-        'user_id': userId,
-        'current_streak': currentStreak,
-        'longest_streak': longestStreak,
-        if (lastVerifiedDate != null)
-          'last_verified_date':
-              lastVerifiedDate!.toIso8601String().substring(0, 10),
-        'updated_at': updatedAt.toIso8601String(),
-      };
+    if (id.isNotEmpty) 'id': id,
+    'user_id': userId,
+    'current_streak': currentStreak,
+    'longest_streak': longestStreak,
+    if (lastVerifiedDate != null)
+      'last_verified_date': lastVerifiedDate!.toIso8601String().substring(
+        0,
+        10,
+      ),
+    'updated_at': updatedAt.toIso8601String(),
+  };
 
   String get milestoneMessage {
     if (currentStreak >= 60) {

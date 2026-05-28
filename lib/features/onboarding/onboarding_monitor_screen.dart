@@ -36,8 +36,10 @@ class OnboardingMonitorScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Share with whoever\'s checking in',
-                      style: Theme.of(context).textTheme.headlineLarge),
+                  Text(
+                    'Share with whoever\'s checking in',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
                   const SizedBox(height: AppDimensions.space8),
                   Text(
                     'A family member (spouse, parent, child) can follow along on the web dashboard. Send them this code; you can always find it again on the Profile tab.',
@@ -48,16 +50,15 @@ class OnboardingMonitorScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(AppDimensions.space24),
                     decoration: BoxDecoration(
                       gradient: AppColors.coralGradient,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusLg,
+                      ),
                     ),
                     child: Column(
                       children: [
                         Text(
                           shortCode,
-                          style: Theme.of(context)
-                              .textTheme
-                              .displaySmall
+                          style: Theme.of(context).textTheme.displaySmall
                               ?.copyWith(color: AppColors.onPrimary),
                         ),
                         const SizedBox(height: AppDimensions.space12),
@@ -66,12 +67,11 @@ class OnboardingMonitorScreen extends ConsumerWidget {
                             fullCode,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: AppColors.onPrimary
-                                      .withValues(alpha: 0.85),
+                                  color: AppColors.onPrimary.withValues(
+                                    alpha: 0.85,
+                                  ),
                                   fontFamily: 'monospace',
                                 ),
                           ),
@@ -81,18 +81,24 @@ class OnboardingMonitorScreen extends ConsumerWidget {
                               ? null
                               : () {
                                   Clipboard.setData(
-                                      ClipboardData(text: fullCode));
+                                    ClipboardData(text: fullCode),
+                                  );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content: Text(
-                                            'Full link code copied to clipboard')),
+                                      content: Text(
+                                        'Full link code copied to clipboard',
+                                      ),
+                                    ),
                                   );
                                 },
-                          icon: const Icon(Icons.copy_rounded,
-                              color: AppColors.onPrimary),
-                          label: const Text('Copy code',
-                              style:
-                                  TextStyle(color: AppColors.onPrimary)),
+                          icon: const Icon(
+                            Icons.copy_rounded,
+                            color: AppColors.onPrimary,
+                          ),
+                          label: const Text(
+                            'Copy code',
+                            style: TextStyle(color: AppColors.onPrimary),
+                          ),
                         ),
                       ],
                     ),
