@@ -1,5 +1,5 @@
-# Required by workmanager_apple and other recent Flutter plugins.
-platform :ios, '14.0'
+# Required by google_mlkit_commons (15.5), workmanager_apple (14.0), and other recent Flutter plugins.
+platform :ios, '15.5'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
