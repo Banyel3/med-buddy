@@ -199,7 +199,13 @@ begin
       nullif(trim(new.raw_user_meta_data->>'name'), ''),
       split_part(new.email, '@', 1)
     ),
-    'patient',
+    -- Dashboard signups pass role='monitor' in user metadata; mobile
+    -- app signups omit the field and fall through to 'patient'. Cast
+    -- to the user_role enum so forged values (e.g. 'admin') error out.
+    coalesce(
+      nullif(trim(new.raw_user_meta_data->>'role'), '')::user_role,
+      'patient'::user_role
+    ),
     coalesce(nullif(trim(new.raw_user_meta_data->>'timezone'), ''), 'Asia/Manila')
   )
   on conflict (id) do nothing;

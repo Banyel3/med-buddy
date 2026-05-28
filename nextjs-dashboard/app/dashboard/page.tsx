@@ -24,12 +24,18 @@ export default async function DashboardPage() {
   if (!user) redirect('/login');
 
   // Role gate — patients land here when they sign in to the wrong surface.
+  // Sign out + redirect to /login with a query flag so the form can render
+  // a clear message; without the signOut() we'd loop via app/page.tsx
+  // (which redirects authenticated users straight back to /dashboard).
   const { data: profile } = await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
     .maybeSingle();
-  if (profile?.role !== 'monitor') redirect('/');
+  if (profile?.role !== 'monitor') {
+    await supabase.auth.signOut();
+    redirect('/login?error=monitor_only');
+  }
 
   // Resolve linked patient(s) via monitor_links.
   const { data: links } = await supabase
