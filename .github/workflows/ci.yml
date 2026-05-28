@@ -77,6 +77,10 @@ jobs:
       - run: flutter --version
       - run: flutter pub get
 
+      - name: Stub .env (gitignored, required as bundled asset)
+        run: |
+          if [ ! -f .env ]; then cp .env.example .env; fi
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
