@@ -49,7 +49,7 @@ export default function VelocityChart({ logs }: { logs: ComplianceLog[] }) {
               tickFormatter={(v) => `${v * 100}%`}
             />
             <Tooltip
-              formatter={(v: number) => `${Math.round(v * 100)}%`}
+              formatter={(v) => `${Math.round(Number(v) * 100)}%`}
               cursor={{ fill: '#EEE7F7' }}
             />
             <Bar dataKey="score" fill="#6D3FD3" radius={[8, 8, 0, 0]} />
