@@ -1,0 +1,65 @@
+enum ComplianceStatus { pending, verified, late, missed }
+
+class ComplianceLogModel {
+  final String id;
+  final String medicationId;
+  final String userId;
+  final DateTime date;
+  final ComplianceStatus status;
+  final String? imageUrl;
+  final DateTime? verifiedAt;
+  final double? faceConfidence;
+  final double? pillConfidence;
+
+  const ComplianceLogModel({
+    required this.id,
+    required this.medicationId,
+    required this.userId,
+    required this.date,
+    required this.status,
+    this.imageUrl,
+    this.verifiedAt,
+    this.faceConfidence,
+    this.pillConfidence,
+  });
+
+  factory ComplianceLogModel.fromJson(Map<String, dynamic> json) =>
+      ComplianceLogModel(
+        id: (json['id'] as String?) ?? '',
+        medicationId: json['medication_id'] as String,
+        userId: json['user_id'] as String,
+        date: DateTime.parse(json['date'] as String),
+        status: _parseStatus(json['status'] as String?),
+        imageUrl: json['image_url'] as String?,
+        verifiedAt: json['verified_at'] == null
+            ? null
+            : DateTime.parse(json['verified_at'] as String),
+        faceConfidence: (json['face_confidence'] as num?)?.toDouble(),
+        pillConfidence: (json['pill_confidence'] as num?)?.toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+    if (id.isNotEmpty) 'id': id,
+    'medication_id': medicationId,
+    'user_id': userId,
+    'date': date.toIso8601String().substring(0, 10),
+    'status': status.name,
+    if (imageUrl != null) 'image_url': imageUrl,
+    if (verifiedAt != null) 'verified_at': verifiedAt!.toIso8601String(),
+    if (faceConfidence != null) 'face_confidence': faceConfidence,
+    if (pillConfidence != null) 'pill_confidence': pillConfidence,
+  };
+
+  static ComplianceStatus _parseStatus(String? value) {
+    switch (value) {
+      case 'verified':
+        return ComplianceStatus.verified;
+      case 'late':
+        return ComplianceStatus.late;
+      case 'missed':
+        return ComplianceStatus.missed;
+      default:
+        return ComplianceStatus.pending;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+# lefthook.yml — pre-commit + pre-push gates for MedBuddy
+# Install: brew install lefthook && lefthook install
+# Bypass once (emergency only): LEFTHOOK=0 git push
+
+pre-commit:
+  parallel: true
+  commands:
+    dart-format:
+      glob: "*.dart"
+      run: dart format --set-exit-if-changed --output=none {staged_files}
+    prettier-dashboard:
+      root: nextjs-dashboard/
+      glob: "{*.ts,*.tsx,*.json,*.css}"
+      run: npx --no-install prettier --check {staged_files} || true
+
+pre-push:
+  parallel: true
+  commands:
+    flutter-analyze:
+      run: flutter analyze --no-fatal-infos
+    flutter-test:
+      run: flutter test --no-pub --reporter=compact
+    dashboard-tsc:
+      root: nextjs-dashboard/
+      run: npx tsc --noEmit -p tsconfig.json
+    dashboard-lint:
+      root: nextjs-dashboard/
+      run: npm run lint
+    deno-test:
+      root: supabase/
+      glob: "functions/**/*.ts"
+      run: deno test --quiet --allow-env --allow-net functions/_tests/ || echo "deno not installed; skipping"

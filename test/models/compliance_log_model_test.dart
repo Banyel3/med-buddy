@@ -1,0 +1,58 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:medbuddy/shared/models/compliance_log_model.dart';
+
+void main() {
+  group('ComplianceLogModel.fromJson status parsing', () {
+    ComplianceLogModel parse(String status) => ComplianceLogModel.fromJson({
+      'medication_id': 'm',
+      'user_id': 'u',
+      'date': '2026-05-24',
+      'status': status,
+    });
+
+    test(
+      'verified',
+      () => expect(parse('verified').status, ComplianceStatus.verified),
+    );
+    test('late', () => expect(parse('late').status, ComplianceStatus.late));
+    test(
+      'missed',
+      () => expect(parse('missed').status, ComplianceStatus.missed),
+    );
+    test(
+      'pending',
+      () => expect(parse('pending').status, ComplianceStatus.pending),
+    );
+    test(
+      'unknown → pending',
+      () => expect(parse('garbage').status, ComplianceStatus.pending),
+    );
+    test('null → pending', () {
+      final log = ComplianceLogModel.fromJson({
+        'medication_id': 'm',
+        'user_id': 'u',
+        'date': '2026-05-24',
+      });
+      expect(log.status, ComplianceStatus.pending);
+    });
+  });
+
+  test('toJson date serializes as ISO-10 string', () {
+    final log = ComplianceLogModel(
+      id: '',
+      medicationId: 'm',
+      userId: 'u',
+      date: DateTime.utc(2026, 5, 24, 12, 30),
+      status: ComplianceStatus.verified,
+      verifiedAt: DateTime.utc(2026, 5, 24, 12, 30),
+      faceConfidence: 0.92,
+      pillConfidence: 0.81,
+    );
+    final json = log.toJson();
+    expect(json['date'], '2026-05-24');
+    expect(json['status'], 'verified');
+    expect(json['face_confidence'], 0.92);
+    expect(json['pill_confidence'], 0.81);
+    expect(json.containsKey('id'), isFalse);
+  });
+}

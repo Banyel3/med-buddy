@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # ---- GitHub Actions ----
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ['*']
+
+  # ---- Next.js dashboard ----
+  - package-ecosystem: npm
+    directory: /nextjs-dashboard
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        patterns: ['*']
+      prod-patch-minor:
+        dependency-type: production
+        update-types: ['patch', 'minor']
+    ignore:
+      # React major bumps deserve a manual planned migration, not a Dependabot PR.
+      - dependency-name: react
+        update-types: ['version-update:semver-major']
+      - dependency-name: react-dom
+        update-types: ['version-update:semver-major']
+      - dependency-name: next
+        update-types: ['version-update:semver-major']
+
+  # ---- Flutter / Dart ----
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    ignore:
+      # Hand-pick Flutter SDK + plugin majors so they're tested together.
+      - dependency-name: supabase_flutter
+        update-types: ['version-update:semver-major']
+      - dependency-name: flutter_riverpod
+        update-types: ['version-update:semver-major']
+      - dependency-name: go_router
+        update-types: ['version-update:semver-major']
