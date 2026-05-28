@@ -20,6 +20,11 @@ export default function LoginPage() {
   );
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+  monitor_only:
+    "That account is a patient account. The dashboard is for monitors only — sign up a new monitor account, or sign in with a different email.",
+};
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +35,9 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    ERROR_MESSAGES[searchParams.get('error') ?? ''] ?? null,
+  );
   const [info, setInfo] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
