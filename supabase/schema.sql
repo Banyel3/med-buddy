@@ -186,6 +186,31 @@ create policy "tokens_owner_write" on public.device_tokens
 create policy "tokens_delete_owner" on public.device_tokens
   for delete using (user_id = auth.uid());
 
+-- New auth user -> public.users profile -------------------------
+-- Auto-create the profile row when a user confirms (or signs up if email
+-- confirmation is off) so the app never lands on a missing-profile state.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.users (id, name, role, timezone)
+  values (
+    new.id,
+    coalesce(
+      nullif(trim(new.raw_user_meta_data->>'name'), ''),
+      split_part(new.email, '@', 1)
+    ),
+    'patient',
+    coalesce(nullif(trim(new.raw_user_meta_data->>'timezone'), ''), 'Asia/Manila')
+  )
+  on conflict (id) do nothing;
+  return new;
+end $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- Storage bucket (run in SQL editor too) -------------------------
 -- insert into storage.buckets (id, name, public) values ('verifications', 'verifications', false)
 --   on conflict (id) do nothing;

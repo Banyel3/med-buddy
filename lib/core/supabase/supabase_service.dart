@@ -47,27 +47,48 @@ class SupabaseService {
   }
 
   Future<MedicationModel> updateMedication(MedicationModel med) async {
-    final updated = await _db
+    final auth = _db.auth.currentUser;
+    if (auth == null) {
+      throw const AuthException('Not signed in.');
+    }
+    if (auth.id != med.userId) {
+      throw const AuthException('You can only edit your own medications.');
+    }
+    final rows = await _db
         .from('medications')
         .update({
           'name': med.name,
           'schedule_time':
               '${_pad(med.scheduleTime.hour)}:${_pad(med.scheduleTime.minute)}:00',
-          'notes': med.notes,
+          'notes': med.notes.isEmpty ? null : med.notes,
           'active': med.active,
         })
         .eq('id', med.id)
-        .select()
-        .single();
-    return MedicationModel.fromJson(updated);
+        .eq('user_id', med.userId)
+        .select();
+    if (rows.isEmpty) {
+      throw StateError(
+          'Medication not found or you no longer have access to it.');
+    }
+    return MedicationModel.fromJson(rows.first);
   }
 
   Future<void> deleteMedication(String medicationId) async {
+    final auth = _db.auth.currentUser;
+    if (auth == null) {
+      throw const AuthException('Not signed in.');
+    }
     // Soft-delete via active=false so compliance_logs FK to historic rows survives.
-    await _db
+    final rows = await _db
         .from('medications')
         .update({'active': false})
-        .eq('id', medicationId);
+        .eq('id', medicationId)
+        .eq('user_id', auth.id)
+        .select('id');
+    if (rows.isEmpty) {
+      throw StateError(
+          'Medication not found or you no longer have access to it.');
+    }
   }
 
   Future<void> updateUserProfile({
