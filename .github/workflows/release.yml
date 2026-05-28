@@ -1,4 +1,4 @@
-name: Android Release
+name: Release (Android + iOS)
 
 on:
   push:
@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   android-release:
-    name: Build APK + AAB and publish GitHub Release
+    name: Build APK + AAB
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -96,6 +96,104 @@ jobs:
           path: release-out/*
           if-no-files-found: error
           retention-days: 30
+
+  ios-release:
+    name: Build unsigned iOS .ipa
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache pub-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v5
+        with:
+          path: ios/Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Stub .env (gitignored, required as bundled asset)
+        run: |
+          if [ ! -f .env ]; then cp .env.example .env; fi
+
+      - run: flutter pub get
+
+      - name: Pod install
+        working-directory: ios
+        run: pod install --repo-update
+
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned IPA
+        id: ipa
+        run: |
+          mkdir -p release-out Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          IPA="release-out/medbuddy-${{ steps.tag.outputs.name }}-unsigned.ipa"
+          zip -qr "$IPA" Payload
+          ls -lh "$IPA"
+
+      - name: Upload IPA (workflow run)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ steps.tag.outputs.name }}
+          path: release-out/*
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [android-release, ios-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download Android artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-${{ steps.tag.outputs.name }}
+          path: release-out
+
+      - name: Download iOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-${{ steps.tag.outputs.name }}
+          path: release-out
+
+      - name: List artifacts
+        run: ls -lh release-out/
 
       - name: Create / update GitHub Release
         uses: softprops/action-gh-release@v2
