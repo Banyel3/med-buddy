@@ -89,3 +89,4 @@ app.*.symbols
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 **/macos/Flutter/ephemeral
 **/xcuserdata/
+.vercel
