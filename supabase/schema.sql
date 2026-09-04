@@ -48,8 +48,19 @@ create table if not exists public.compliance_logs (
   verified_at timestamptz,
   face_confidence real,
   pill_confidence real,
+  -- Set when the patient pressed "I can't take it now" on the dose alarm.
+  -- Status stays 'missed' (the dose wasn't taken), but this separates
+  -- "they told us they couldn't" from silence, which is what a monitor
+  -- actually wants to know. Deliberately a column and not a new enum value:
+  -- a new compliance_status would ripple through daily-rollover, the
+  -- miss-alert webhook condition, the Dart enum and every dashboard status map.
+  skipped_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+-- Idempotent add for databases created before the dose alarm landed.
+alter table public.compliance_logs
+  add column if not exists skipped_at timestamptz;
 create index if not exists compliance_logs_user_date_idx
   on public.compliance_logs (user_id, date desc);
 

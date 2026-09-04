@@ -21,28 +21,6 @@ class AccessibilityLockService {
 
   bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
-  Future<bool> activate() async {
-    lockedNotifier.value = true;
-    if (!_isAndroid) return false;
-    try {
-      return await _channel.invokeMethod<bool>('activate') ?? false;
-    } catch (e) {
-      debugPrint('AccessibilityLockService.activate error: $e');
-      return false;
-    }
-  }
-
-  Future<bool> deactivate() async {
-    lockedNotifier.value = false;
-    if (!_isAndroid) return false;
-    try {
-      return await _channel.invokeMethod<bool>('deactivate') ?? false;
-    } catch (e) {
-      debugPrint('AccessibilityLockService.deactivate error: $e');
-      return false;
-    }
-  }
-
   Future<bool> isAccessibilityEnabled() async {
     if (!_isAndroid) return false;
     try {
@@ -120,30 +98,119 @@ class AccessibilityLockService {
     }
   }
 
-  /// Persist the lock mode in native SharedPreferences so the
-  /// AlarmManager-driven overlay can read it without bouncing through
-  /// Flutter (works even if app is killed). Mode is one of 'hard' / 'soft'.
-  Future<void> setLockMode(LockMode mode) async {
+  /// Persist whether dose alarms are on in native SharedPreferences, so the
+  /// AlarmManager-driven receiver can read it without starting the Flutter VM
+  /// (works even if the app is killed).
+  Future<void> setAlarmEnabled(bool enabled) async {
     if (!_isAndroid) return;
     try {
-      await _channel.invokeMethod('setLockMode', {'mode': mode.name});
+      await _channel.invokeMethod('setAlarmEnabled', {'enabled': enabled});
     } catch (e) {
-      debugPrint('setLockMode error: $e');
+      debugPrint('setAlarmEnabled error: $e');
     }
   }
 
-  Future<LockMode> getLockMode() async {
-    if (!_isAndroid) return LockMode.hard;
+  Future<bool> isAlarmEnabled() async {
+    if (!_isAndroid) return false;
     try {
-      final raw = await _channel.invokeMethod<String>('getLockMode');
-      return LockMode.values.firstWhere(
-        (m) => m.name.toUpperCase() == raw?.toUpperCase(),
-        orElse: () => LockMode.hard,
-      );
+      return await _channel.invokeMethod<bool>('isAlarmEnabled') ?? true;
     } catch (e) {
-      return LockMode.hard;
+      return true;
+    }
+  }
+
+  /// Silence a ringing alarm. Called the moment a dose is verified.
+  Future<void> stopAlarm() async {
+    lockedNotifier.value = false;
+    if (!_isAndroid) return;
+    try {
+      await _channel.invokeMethod('stopAlarm');
+    } catch (e) {
+      debugPrint('stopAlarm error: $e');
+    }
+  }
+
+  /// The escape hatch: the user says they can't take this dose right now.
+  /// Stops the alarm and queues the outcome so it reaches the monitor.
+  Future<void> skipDose() async {
+    lockedNotifier.value = false;
+    if (!_isAndroid) return;
+    try {
+      await _channel.invokeMethod('skipDose');
+    } catch (e) {
+      debugPrint('skipDose error: $e');
+    }
+  }
+
+  /// How long an alarm rings before it gives up. Native owns the value so the
+  /// countdown on the overlay and the one in Flutter can't drift apart.
+  Future<int> alarmCeilingMinutes() async {
+    if (!_isAndroid) return 5;
+    try {
+      return await _channel.invokeMethod<int>('alarmCeilingMinutes') ?? 5;
+    } catch (e) {
+      return 5;
+    }
+  }
+
+  /// Outcomes of alarms that ended while Dart wasn't running. Each entry is
+  /// `medId|reason|epochMillis`; draining is destructive.
+  Future<List<AlarmOutcome>> drainPendingOutcomes() async {
+    if (!_isAndroid) return const [];
+    try {
+      final raw = await _channel.invokeListMethod<String>(
+        'drainPendingOutcomes',
+      );
+      if (raw == null) return const [];
+      return raw
+          .map(AlarmOutcome.tryParse)
+          .whereType<AlarmOutcome>()
+          .toList(growable: false);
+    } catch (e) {
+      debugPrint('drainPendingOutcomes error: $e');
+      return const [];
     }
   }
 }
 
-enum LockMode { hard, soft }
+/// Why a dose alarm stopped without a verified photo.
+enum AlarmEndReason {
+  /// The user pressed "I can't take it now".
+  skipped,
+
+  /// The alarm rang for its full window and gave up.
+  ceiling,
+}
+
+/// One alarm that ended without a verification, waiting to be logged.
+class AlarmOutcome {
+  final String medicationId;
+  final AlarmEndReason reason;
+  final DateTime endedAt;
+
+  const AlarmOutcome({
+    required this.medicationId,
+    required this.reason,
+    required this.endedAt,
+  });
+
+  /// Parses `medId|reason|epochMillis`. Returns null on anything malformed
+  /// rather than throwing — a corrupt queue entry must not block the rest.
+  static AlarmOutcome? tryParse(String raw) {
+    final parts = raw.split('|');
+    if (parts.length != 3) return null;
+    final millis = int.tryParse(parts[2]);
+    if (millis == null) return null;
+    final reason = switch (parts[1]) {
+      'skipped' => AlarmEndReason.skipped,
+      'ceiling' => AlarmEndReason.ceiling,
+      _ => null,
+    };
+    if (reason == null) return null;
+    return AlarmOutcome(
+      medicationId: parts[0],
+      reason: reason,
+      endedAt: DateTime.fromMillisecondsSinceEpoch(millis),
+    );
+  }
+}

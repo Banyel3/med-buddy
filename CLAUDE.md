@@ -41,7 +41,7 @@ npm run lint
 flutter pub get
 flutter analyze --fatal-infos
 flutter test --coverage
-flutter run --dart-define=MEDBUDDY_LOCK_MODE=soft   # never test hard lock casually
+flutter run --dart-define=MEDBUDDY_ALARM=off        # never dev with the alarm on
 
 # Edge Functions
 cd supabase && deno test --allow-env --allow-net functions/_tests/
@@ -52,13 +52,24 @@ The app will not build without it. `cp .env.example .env` is what CI does.
 
 ## Architecture notes that are not obvious from the tree
 
-**The Android lock is native Kotlin, not a pub package.**
+**The Android dose alarm is native Kotlin, not a pub package.**
 `lib/features/lock/services/accessibility_lock_service.dart` is a `MethodChannel`
 (`medbuddy/lock`) onto `android/app/src/main/kotlin/com/medbuddy/medbuddy/`
-(`MainActivity`, `MedBuddyAccessibility`, `LockOverlayService`,
-`LockAlarmScheduler`, `LockAlarmReceiver`). The `flutter_accessibility_service`
-and `flutter_overlay_window` pub deps are **unused leftovers** — do not build on
-them. iOS has no system overlay; `LockGate` renders an in-app modal instead.
+(`MainActivity`, `MedBuddyAccessibility`, `LockOverlayService`, `AlarmRinger`,
+`LockAlarmScheduler`, `LockAlarmReceiver`). iOS has no system overlay and no
+alarm API below iOS 26; `LockGate` renders an in-app modal instead. AlarmKit is
+the iOS path when the deployment target can move off 15.5.
+
+**The alarm can end with no Flutter engine alive.** `LockOverlayService` parks
+the outcome in `PendingOutcomes` (SharedPreferences); `AlarmOutcomeSync` drains
+it into `compliance_logs` next time Dart runs. Don't try to wake Dart from the
+receiver. Two constants tune everything: `LockAlarmScheduler.ALARM_DELAY_MINUTES`
+(15) and `AlarmPrefs.CEILING_MINUTES` (5).
+
+**A declined dose is `missed` + `skipped_at`, not a new status.** Adding a
+`skipped` enum member would ripple through the Postgres type, the Dart enum,
+`daily-rollover`, the `miss-alert` webhook condition and every dashboard status
+map. The column carries the same information.
 
 **Three overlapping schedulers exist.** `flutter_local_notifications` (in-app
 reminders), `workmanager` (`BackgroundScheduler`, 12-hourly re-arm), and native

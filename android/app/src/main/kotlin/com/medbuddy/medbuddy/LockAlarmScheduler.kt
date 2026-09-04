@@ -12,12 +12,16 @@ import java.util.Calendar
 /**
  * Schedules per-medication "auto-lock" alarms via [AlarmManager].
  *
- * For each active medication MedBuddy schedules one exact alarm
- * `medSchedule + 30 minutes` (the same offset the T+30 reminder uses).
- * When it fires, [LockAlarmReceiver] flips [LockState.locked] true and
- * brings the overlay up, even if the app is in the background or killed.
- * If the user verifies their dose before the alarm fires the Dart layer
- * calls [cancel] to unschedule it.
+ * For each active medication MedBuddy schedules one alarm at
+ * `medSchedule + `[ALARM_DELAY_MINUTES]. When it fires, [LockAlarmReceiver]
+ * marks the lock active and starts [LockOverlayService], which rings, even if
+ * the app is backgrounded or killed. If the user verifies their dose before
+ * the alarm fires the Dart layer calls [cancel] to unschedule it.
+ *
+ * Uses [AlarmManager.setAlarmClock] rather than setExactAndAllowWhileIdle: it
+ * is the strongest scheduling guarantee Android offers, it survives Doze, and
+ * it is what marks this as a genuine alarm app to the platform — the
+ * status-bar alarm icon comes from here.
  *
  * Alarm IDs are derived from `medicationId.hashCode()` so reschedules
  * replace cleanly.
@@ -25,7 +29,16 @@ import java.util.Calendar
 object LockAlarmScheduler {
 
     private const val TAG = "LockAlarmScheduler"
-    private const val LOCK_OFFSET_MINUTES = 30
+
+    /**
+     * Minutes after the scheduled dose time before the alarm starts ringing.
+     *
+     * Not zero on purpose: an alarm at dose time punishes the majority who
+     * simply take their pill. Ringing is the escalation, not the opener. Set
+     * this to 0 for a true alarm-at-dose-time; nothing else depends on it.
+     */
+    const val ALARM_DELAY_MINUTES = 15
+
     private const val PREFS = "medbuddy_lock_alarms"
     private const val KEY_ALL_IDS = "active_ids"
 
@@ -36,7 +49,7 @@ object LockAlarmScheduler {
         hour: Int,
         minute: Int,
     ): Long {
-        val triggerAt = nextOccurrenceMillis(hour, minute, LOCK_OFFSET_MINUTES)
+        val triggerAt = nextOccurrenceMillis(hour, minute, ALARM_DELAY_MINUTES)
         val requestCode = requestCodeForMed(medicationId)
         val intent = Intent(context, LockAlarmReceiver::class.java).apply {
             action = LockAlarmReceiver.ACTION_FIRE
@@ -57,7 +70,14 @@ object LockAlarmScheduler {
             Log.w(TAG, "Exact alarm permission missing; falling back to inexact.")
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         } else {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
+            val showIntent = PendingIntent.getActivity(
+                context,
+                requestCode,
+                context.packageManager
+                    .getLaunchIntentForPackage(context.packageName) ?: Intent(),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showIntent), pi)
         }
 
         rememberAlarm(context, medicationId)

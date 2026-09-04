@@ -10,6 +10,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
 
+    <!-- Dose alarm takes over the screen. Since Jan 2025 this is default-granted
+         only to calling and alarm apps; MedBuddy qualifies as an alarm app, but
+         the Play Console declaration is still required before release. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <uses-permission android:name="android.permission.TURN_SCREEN_ON"/>
+
     <!-- Boot rescheduling -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 

@@ -9,7 +9,9 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/device_utils.dart';
+import '../../shared/providers/lock_provider.dart';
 import '../../shared/widgets/primary_button.dart';
+import 'alarm_outcome_sync.dart';
 
 /// Phase 3 lock screen. Rendered when MedBuddy is brought to front by the
 /// accessibility service. Blocks BACK at the Flutter layer (the Android
@@ -25,7 +27,20 @@ class LockScreen extends ConsumerStatefulWidget {
 class _LockScreenState extends ConsumerState<LockScreen> {
   Duration _elapsed = Duration.zero;
   Timer? _timer;
+  bool _skipping = false;
   late final DateTime _start;
+
+  /// Stops the alarm and records that the patient responded. The native side
+  /// queues the outcome; [AlarmOutcomeSync] turns it into a compliance row so
+  /// the monitor sees "they said they couldn't" rather than silence.
+  Future<void> _skipDose() async {
+    setState(() => _skipping = true);
+    await ref.read(lockServiceProvider).skipDose();
+    if (!mounted) return;
+    await ref.read(alarmOutcomeSyncProvider).drainAndLog();
+    if (!mounted) return;
+    context.goNamed(AppRoute.home);
+  }
 
   @override
   void initState() {
@@ -101,7 +116,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                           ),
                         ),
                         child: Text(
-                          'Locked for ${_fmt(_elapsed)}',
+                          'Ringing for ${_fmt(_elapsed)}',
                           style: Theme.of(context).textTheme.labelLarge
                               ?.copyWith(color: AppColors.onPrimary),
                         ),
@@ -112,6 +127,26 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         icon: Icons.camera_alt_rounded,
                         gradient: false,
                         onPressed: () => context.goNamed(AppRoute.verification),
+                      ),
+                      const SizedBox(height: AppDimensions.space12),
+                      // The escape hatch. Someone out of medication, in
+                      // hospital or driving must be able to stop this. It is
+                      // recorded, not silent: the monitor is told they said
+                      // they couldn't.
+                      TextButton(
+                        onPressed: _skipping ? null : _skipDose,
+                        child: Text(
+                          _skipping ? 'Stopping…' : "I can't take it now",
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: AppColors.onPrimary.withValues(
+                                  alpha: 0.9,
+                                ),
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.onPrimary
+                                    .withValues(alpha: 0.5),
+                              ),
+                        ),
                       ),
                     ],
                   ),

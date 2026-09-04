@@ -20,6 +20,7 @@ class _OnboardingAccessibilityScreenState
     extends ConsumerState<OnboardingAccessibilityScreen>
     with WidgetsBindingObserver {
   bool _enabled = false;
+  bool _overlayGranted = false;
   bool _checking = false;
 
   @override
@@ -42,10 +43,13 @@ class _OnboardingAccessibilityScreenState
 
   Future<void> _check() async {
     setState(() => _checking = true);
-    final ok = await ref.read(lockServiceProvider).isAccessibilityEnabled();
+    final svc = ref.read(lockServiceProvider);
+    final ok = await svc.isAccessibilityEnabled();
+    final overlay = await svc.canDrawOverlays();
     if (!mounted) return;
     setState(() {
       _enabled = ok;
+      _overlayGranted = overlay;
       _checking = false;
     });
   }
@@ -77,14 +81,14 @@ class _OnboardingAccessibilityScreenState
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Enable lock mode (optional)',
+                    'Enable the dose alarm (optional)',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: AppDimensions.space8),
                   Text(
-                    'MedBuddy can lock your phone when you skip a dose. '
-                    'Grant Accessibility + overlay permission to enable. '
-                    'You can skip and turn it on later.',
+                    'MedBuddy can ring like an alarm and cover your screen '
+                    'until you verify a dose. Grant Accessibility + overlay '
+                    'permission to enable. You can skip and turn it on later.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: AppDimensions.space24),
@@ -97,7 +101,8 @@ class _OnboardingAccessibilityScreenState
                   const SizedBox(height: AppDimensions.space12),
                   _PermRow(
                     title: 'Display over other apps',
-                    granted: false,
+                    granted: _overlayGranted,
+                    busy: _checking,
                     onTap: _requestOverlay,
                   ),
                   const Spacer(),

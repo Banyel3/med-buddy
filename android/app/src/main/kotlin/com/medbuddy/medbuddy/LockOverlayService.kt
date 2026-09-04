@@ -1,11 +1,17 @@
 package com.medbuddy.medbuddy
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
@@ -13,41 +19,174 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.TextView
 
 /**
- * Hosts a system-level overlay window that covers all other apps while the
- * lock is active. Uses TYPE_ACCESSIBILITY_OVERLAY when MedBuddyAccessibility
- * is enabled (most aggressive — survives BACK/HOME); falls back to
- * TYPE_APPLICATION_OVERLAY (requires SYSTEM_ALERT_WINDOW permission) when
- * the accessibility service is not yet granted.
+ * The dose alarm: a foreground service that rings, covers the screen, and
+ * releases only when the dose is verified, the user says they can't take it,
+ * or the ceiling is reached.
  *
- * The overlay itself is a thin Android View — the user lands in MedBuddy's
- * Flutter LockScreen as soon as MedBuddyAccessibility re-fronts the app.
+ * The overlay uses TYPE_ACCESSIBILITY_OVERLAY when MedBuddyAccessibility is
+ * enabled (survives BACK/HOME); it falls back to TYPE_APPLICATION_OVERLAY when
+ * only SYSTEM_ALERT_WINDOW is granted. If neither is available the service
+ * still runs and still rings — the full-screen-intent notification is then the
+ * way back into the app.
+ *
+ * The service MUST call [startForeground] on every entry into onStartCommand:
+ * it is started via startForegroundService(), and Android 12+ throws
+ * ForegroundServiceDidNotStartInTimeException if the promotion doesn't happen
+ * within ~5 seconds.
  */
 class LockOverlayService : Service() {
 
     private val tag = "LockOverlayService"
     private var overlay: View? = null
     private var windowManager: WindowManager? = null
-
-    /// Soft-mode tap counter. Resets every time the overlay is shown.
-    private var softTapsRemaining: Int = SOFT_TAPS_REQUIRED
+    private var ringer: AlarmRinger? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private var countdownView: TextView? = null
 
     companion object {
         const val ACTION_SHOW = "com.medbuddy.medbuddy.LOCK_SHOW"
         const val ACTION_HIDE = "com.medbuddy.medbuddy.LOCK_HIDE"
-        private const val SOFT_TAPS_REQUIRED = 5
+
+        /** User pressed "I can't take it now" — stop, and let Dart log it. */
+        const val ACTION_SKIP = "com.medbuddy.medbuddy.LOCK_SKIP"
+
+        const val EXTRA_MED_NAME = "med_name"
+
+        private const val CHANNEL_ID = "medbuddy_dose_alarm"
+        private const val NOTIFICATION_ID = 4201
+
+        /** Why an alarm ended without a verification. See [PendingOutcomes]. */
+        const val REASON_SKIPPED = "skipped"
+        const val REASON_CEILING = "ceiling"
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun onCreate() {
+        super.onCreate()
+        LockState.restore(this)
+        ringer = AlarmRinger(this)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Promote first, always. Anything that can throw must happen after
+        // this or the service is killed mid-start.
+        startForeground(NOTIFICATION_ID, buildNotification(intent))
+
         when (intent?.action) {
-            ACTION_SHOW -> showOverlay()
-            ACTION_HIDE -> hideOverlay()
+            ACTION_SHOW -> beginAlarm()
+            ACTION_SKIP -> endAlarm(REASON_SKIPPED)
+            ACTION_HIDE -> stopAlarmAndSelf()
+            else -> stopAlarmAndSelf()
         }
         return START_NOT_STICKY
     }
+
+    // ---- Alarm lifecycle -------------------------------------------------
+
+    private fun beginAlarm() {
+        if (ringer?.isRinging == true) return
+
+        showOverlay()
+        ringer?.start()
+
+        // Hard ceiling. Never ring forever: a phone left in another room would
+        // otherwise ring until the battery dies, and someone who genuinely
+        // cannot take the dose would be trapped.
+        val ceilingMillis = AlarmPrefs.CEILING_MINUTES * 60_000L
+        handler.postDelayed({ endAlarm(REASON_CEILING) }, ceilingMillis)
+        handler.post(countdownTick)
+    }
+
+    /**
+     * Ends the alarm without a verification and parks the reason for Dart to
+     * write to `compliance_logs`. Parked rather than pushed because this can
+     * happen with no Flutter engine alive — see [PendingOutcomes].
+     */
+    private fun endAlarm(reason: String) {
+        Log.i(tag, "Alarm ended: $reason")
+        PendingOutcomes.add(this, LockState.medId(this), reason)
+        stopAlarmAndSelf()
+    }
+
+    private fun stopAlarmAndSelf() {
+        handler.removeCallbacksAndMessages(null)
+        ringer?.stop()
+        hideOverlay()
+        LockState.setLocked(this, false)
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    private val countdownTick = object : Runnable {
+        override fun run() {
+            val view = countdownView ?: return
+            val ceilingMillis = AlarmPrefs.CEILING_MINUTES * 60_000L
+            val remaining = (ceilingMillis - LockState.elapsedMillis(this@LockOverlayService))
+                .coerceAtLeast(0L)
+            val secs = remaining / 1000
+            view.text = "Stops on its own in %d:%02d".format(secs / 60, secs % 60)
+            if (remaining > 0) handler.postDelayed(this, 1000)
+        }
+    }
+
+    // ---- Notification ----------------------------------------------------
+
+    private fun buildNotification(intent: Intent?): Notification {
+        ensureChannel()
+
+        val medName = intent?.getStringExtra(EXTRA_MED_NAME)
+            ?.takeIf { it.isNotBlank() }
+            ?: LockState.medName(this).takeIf { it.isNotBlank() }
+            ?: "your medication"
+
+        val launch = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val contentPi = PendingIntent.getActivity(
+            this,
+            0,
+            launch ?: Intent(),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        return Notification.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setContentTitle("Time for $medName")
+            .setContentText("Verify your dose to stop the alarm.")
+            .setCategory(Notification.CATEGORY_ALARM)
+            .setOngoing(true)
+            .setContentIntent(contentPi)
+            // The way back in when no overlay permission was granted. Requires
+            // USE_FULL_SCREEN_INTENT in the manifest, which alarm apps get.
+            .setFullScreenIntent(contentPi, true)
+            .build()
+    }
+
+    private fun ensureChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Dose alarm",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Rings until you verify your dose."
+            // The ringing is driven by AlarmRinger on STREAM_ALARM, not by the
+            // notification, so the channel itself stays silent — otherwise the
+            // user hears two sounds at once.
+            setSound(null, null)
+            enableVibration(false)
+            setBypassDnd(true)
+        }
+        nm.createNotificationChannel(channel)
+    }
+
+    // ---- Overlay ---------------------------------------------------------
 
     private fun showOverlay() {
         if (overlay != null) return
@@ -57,7 +196,9 @@ class LockOverlayService : Service() {
 
         val accessibilityActive = MedBuddyAccessibility.instance != null
         if (!accessibilityActive && !canDraw) {
-            Log.w(tag, "No overlay permission — skipping overlay show.")
+            // No overlay permission. The alarm still rings and the full-screen
+            // intent still fires — we just can't cover other apps.
+            Log.w(tag, "No overlay permission — ringing without overlay.")
             return
         }
 
@@ -73,41 +214,36 @@ class LockOverlayService : Service() {
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             type,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED,
             PixelFormat.TRANSLUCENT,
         )
         params.gravity = Gravity.TOP or Gravity.START
 
-        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE)
-                as LayoutInflater
+        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val view = inflater.inflate(R.layout.lock_overlay, null, false)
 
-        // Soft-mode skip button — visible only when lock_mode = SOFT.
-        val mode = LockModePrefs.get(this)
-        val skipButton = view.findViewById<Button>(R.id.lock_soft_skip)
-        if (skipButton != null) {
-            if (mode == LockMode.SOFT) {
-                softTapsRemaining = SOFT_TAPS_REQUIRED
-                skipButton.visibility = View.VISIBLE
-                skipButton.text = "Skip for now (tap ${softTapsRemaining}×)"
-                skipButton.setOnClickListener {
-                    softTapsRemaining -= 1
-                    if (softTapsRemaining <= 0) {
-                        Log.i(tag, "Soft lock dismissed by user (5 taps).")
-                        LockState.locked = false
-                        hideOverlay()
-                    } else {
-                        skipButton.text =
-                            "Skip for now (tap ${softTapsRemaining}×)"
-                    }
-                }
-            } else {
-                skipButton.visibility = View.GONE
-                skipButton.setOnClickListener(null)
-            }
+        view.findViewById<TextView>(R.id.lock_title)?.text =
+            LockState.medName(this).takeIf { it.isNotBlank() }
+                ?.let { "Time for $it" }
+                ?: "Time to verify your dose"
+
+        countdownView = view.findViewById(R.id.lock_countdown)
+
+        // The escape hatch. Always present — someone who is out of medication,
+        // in hospital, or driving must be able to stop this. It is recorded,
+        // not silent: the monitor sees that they said they couldn't.
+        view.findViewById<Button>(R.id.lock_skip)?.setOnClickListener {
+            endAlarm(REASON_SKIPPED)
+        }
+
+        view.findViewById<Button>(R.id.lock_verify)?.setOnClickListener {
+            val launch = packageManager.getLaunchIntentForPackage(packageName)
+            launch?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (launch != null) startActivity(launch)
         }
 
         val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -115,25 +251,23 @@ class LockOverlayService : Service() {
             wm.addView(view, params)
             overlay = view
             windowManager = wm
-            Log.i(tag, "Overlay shown (type=$type, mode=$mode).")
+            Log.i(tag, "Overlay shown (type=$type).")
         } catch (e: Exception) {
-            Log.e(tag, "addView failed", e)
+            Log.e(tag, "addView failed — ringing without overlay.", e)
         }
     }
 
     private fun hideOverlay() {
+        countdownView = null
         val view = overlay ?: return
-        try {
-            windowManager?.removeView(view)
-        } catch (e: Exception) {
-            Log.w(tag, "removeView failed", e)
-        }
+        runCatching { windowManager?.removeView(view) }
         overlay = null
         windowManager = null
-        Log.i(tag, "Overlay hidden.")
     }
 
     override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
+        ringer?.stop()
         hideOverlay()
         super.onDestroy()
     }
