@@ -18,9 +18,11 @@ class SupabaseBootstrap {
       );
     }
 
+    // `publishableKey` is the current name for what the Supabase dashboard
+    // still labels the anon key — same value, `anonKey` is deprecated.
     await Supabase.initialize(
       url: url.isEmpty ? 'https://placeholder.supabase.co' : url,
-      anonKey: anon.isEmpty ? 'placeholder' : anon,
+      publishableKey: anon.isEmpty ? 'placeholder' : anon,
       debug: false,
     );
   }
