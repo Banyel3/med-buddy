@@ -160,10 +160,12 @@ class VerificationController extends StateNotifier<VerificationState> {
           pillConfidence: result.pillConfidence,
         ),
       );
-      // Release the lock if active (Phase 3).
+      // The mission is complete — silence the alarm immediately. This runs
+      // before the state update so the ringing stops the instant the dose is
+      // accepted, not after the UI settles.
       final lockSvc = _ref.read(lockServiceProvider);
-      await lockSvc.deactivate();
-      // Cancel today's auto-lock alarm for this med so it doesn't re-arm.
+      await lockSvc.stopAlarm();
+      // Cancel today's alarm for this med so it doesn't re-arm later today.
       if (med != null) await lockSvc.cancelLockAlarm(med.id);
       state = state.copyWith(submitting: false);
       return true;

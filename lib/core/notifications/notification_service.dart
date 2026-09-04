@@ -37,7 +37,6 @@ class NotificationService {
     );
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
-      onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
     await _plugin
@@ -82,18 +81,14 @@ class NotificationService {
     iOS: DarwinNotificationDetails(),
   );
 
-  static void _onNotificationResponse(NotificationResponse response) {
-    if (response.payload == 'lock-activate') {
-      // Fire-and-forget — lock service is idempotent.
-      AccessibilityLockService.instance.activate();
-    }
-  }
-
   /// Cancels every reminder and re-schedules one set per active medication.
   /// Stable per-med IDs via `medication.id.hashCode` so re-runs replace rather
-  /// than duplicate. Three notifications per med: reminder, T+15 escalation,
-  /// T+30 lock. Also schedules a native AlarmManager exact-alarm so the lock
-  /// auto-engages whether the app is foregrounded or killed.
+  /// than duplicate.
+  ///
+  /// One notification per med: the reminder at dose time. The old T+15 nudge
+  /// and T+30 lock notification are gone — the native dose alarm now owns
+  /// everything after dose time, and posting notifications alongside a ringing
+  /// alarm just adds noise to a screen the user is already looking at.
   Future<void> scheduleAllReminders(List<MedicationModel> meds) async {
     await init();
     await _plugin.cancelAll();
@@ -103,15 +98,6 @@ class NotificationService {
     for (final med in meds.where((m) => m.active)) {
       final base = med.id.hashCode & 0x7FFFFFFF; // positive 31-bit
       final remindAt = ScheduleMath.nextInstanceOf(med.scheduleTime, tz.local);
-      final escalateAt = ScheduleMath.nextInstanceOf(
-        ScheduleMath.addMinutes(med.scheduleTime, 15),
-        tz.local,
-      );
-      final lockAt = ScheduleMath.nextInstanceOf(
-        ScheduleMath.addMinutes(med.scheduleTime, 30),
-        tz.local,
-      );
-
       await _plugin.zonedSchedule(
         base + 0,
         'Time for ${med.name} 💊',
@@ -124,32 +110,8 @@ class NotificationService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
 
-      await _plugin.zonedSchedule(
-        base + 1,
-        'Still waiting on you 👀',
-        "Take ${med.name} when you're ready.",
-        escalateAt,
-        _details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-
-      await _plugin.zonedSchedule(
-        base + 2,
-        'Phone locking now 🔒',
-        'Verify your dose to unlock your phone.',
-        lockAt,
-        _details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-        payload: 'lock-activate',
-      );
-
-      // Native AlarmManager auto-arm — fires even when app is killed.
+      // Native AlarmManager dose alarm — rings even when the app is killed.
+      // Fires at scheduleTime + LockAlarmScheduler.ALARM_DELAY_MINUTES.
       await AccessibilityLockService.instance.scheduleLockAlarm(
         medId: med.id,
         medName: med.name,

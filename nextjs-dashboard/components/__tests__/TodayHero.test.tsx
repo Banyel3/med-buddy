@@ -15,6 +15,27 @@ describe('TodayHero', () => {
     expect(screen.getByText(/Ban hasn't logged today/)).toBeInTheDocument();
   });
 
+  it('distinguishes a declined dose from silence', () => {
+    // Same status, different sentence: a monitor needs to know the difference
+    // between "they answered and said no" and "nothing happened".
+    render(
+      <TodayHero
+        patientName="Ban"
+        skippedAt="2026-09-04T08:40:00.000Z"
+        status="missed"
+      />,
+    );
+    expect(screen.getByText(/Ban said they couldn't take it/)).toBeInTheDocument();
+    expect(screen.queryByText(/hasn't logged today/)).not.toBeInTheDocument();
+  });
+
+  it('falls back to the plain missed copy when the timestamp is unusable', () => {
+    render(
+      <TodayHero patientName="Ban" skippedAt="not-a-date" status="missed" />,
+    );
+    expect(screen.getByText(/an unknown time/)).toBeInTheDocument();
+  });
+
   it('renders no-log fallback', () => {
     render(<TodayHero status="no-log" patientName="Ban" />);
     expect(screen.getByText('No log yet')).toBeInTheDocument();

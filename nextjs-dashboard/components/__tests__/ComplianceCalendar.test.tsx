@@ -14,6 +14,7 @@ const sample: ComplianceLog[] = [
     verified_at: null,
     face_confidence: null,
     pill_confidence: null,
+    skipped_at: null,
   },
 ];
 

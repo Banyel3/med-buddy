@@ -13,4 +13,92 @@ html, body {
 
 h1, h2, h3, h4 {
   font-family: theme('fontFamily.display');
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+@layer components {
+  /*
+   * Landing page type scale (1.28 ratio). These live here rather than as
+   * Tailwind utilities because they are fluid clamps with paired tracking,
+   * and repeating the clamp inline at every call site invites drift.
+   *
+   * The display tier appears exactly once per page — DESIGN.md's
+   * One-Display Rule. Tracking floor is -0.035em; anything tighter and the
+   * letters touch.
+   */
+  .type-display {
+    @apply font-display font-extrabold;
+    font-size: clamp(2.6rem, 6.4vw, 5rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+
+  .type-h2 {
+    @apply font-display font-extrabold;
+    font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+  }
+
+  .type-lede {
+    font-size: clamp(1.05rem, 1.65vw, 1.3rem);
+    line-height: 1.55;
+  }
+
+  /* Pill buttons. DESIGN.md: always full radius, never square. */
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-full border-[1.5px]
+           border-transparent px-7 py-[0.95rem] font-body text-[0.98rem]
+           font-semibold no-underline transition-colors duration-200;
+  }
+
+  /* Press, don't hover — the phone has no hover state and desktop's primary
+     affordance is the press tint, not a lift. */
+  .btn:active {
+    transform: scale(0.985);
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white;
+    box-shadow: 0 8px 20px rgba(109, 63, 211, 0.32);
+  }
+
+  .btn-primary:hover {
+    background: #5A32B8;
+  }
+
+  .btn-ghost-dark {
+    @apply border-night-line bg-transparent text-on-night;
+  }
+
+  .btn-ghost-dark:hover {
+    @apply border-accent bg-night-raised;
+  }
+}
+
+/*
+ * The landing page commits to a single visual world: a dusk -> day -> dusk
+ * arc where the dark and light folds are the art direction, not a theme.
+ * Inverting it for dark mode would destroy the concept, so every colour is
+ * painted explicitly and the page holds on either host ground.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift,
+  .animate-rise {
+    animation: none !important;
+  }
+
+  .btn:active {
+    transform: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+  }
 }

@@ -1,7 +1,6 @@
 package com.medbuddy.medbuddy
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
@@ -14,27 +13,29 @@ class MainActivity : FlutterActivity() {
 
     private val channelName = "medbuddy/lock"
 
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        // A dose alarm has to reach a phone that is face-down, dark and locked.
+        // Without these the activity launches behind the keyguard and the user
+        // sees nothing until they happen to pick the phone up.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
+            )
+        }
+        LockState.restore(this)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "activate" -> {
-                        LockState.locked = true
-                        startService(
-                            Intent(this, LockOverlayService::class.java)
-                                .setAction(LockOverlayService.ACTION_SHOW),
-                        )
-                        result.success(true)
-                    }
-                    "deactivate" -> {
-                        LockState.locked = false
-                        startService(
-                            Intent(this, LockOverlayService::class.java)
-                                .setAction(LockOverlayService.ACTION_HIDE),
-                        )
-                        result.success(true)
-                    }
                     "isAccessibilityEnabled" ->
                         result.success(isAccessibilityServiceEnabled())
                     "openAccessibilitySettings" -> {
@@ -89,16 +90,41 @@ class MainActivity : FlutterActivity() {
                         LockAlarmScheduler.cancelAll(this)
                         result.success(true)
                     }
-                    "setLockMode" -> {
-                        val mode = (call.argument<String>("mode") ?: "hard")
-                            .uppercase()
-                        val parsed = runCatching { LockMode.valueOf(mode) }
-                            .getOrDefault(LockMode.HARD)
-                        LockModePrefs.set(this, parsed)
-                        result.success(parsed.name)
+                    "setAlarmEnabled" -> {
+                        val enabled = call.argument<Boolean>("enabled") ?: true
+                        AlarmPrefs.setEnabled(this, enabled)
+                        result.success(enabled)
                     }
-                    "getLockMode" -> {
-                        result.success(LockModePrefs.get(this).name)
+                    "isAlarmEnabled" -> {
+                        result.success(AlarmPrefs.isEnabled(this))
+                    }
+                    "stopAlarm" -> {
+                        // Verification succeeded — silence everything now.
+                        LockState.setLocked(this, false)
+                        startService(
+                            Intent(this, LockOverlayService::class.java)
+                                .setAction(LockOverlayService.ACTION_HIDE),
+                        )
+                        result.success(true)
+                    }
+                    "skipDose" -> {
+                        // "I can't take it now" pressed inside the Flutter UI.
+                        // Same path as the overlay button so both are logged.
+                        startService(
+                            Intent(this, LockOverlayService::class.java)
+                                .setAction(LockOverlayService.ACTION_SKIP),
+                        )
+                        result.success(true)
+                    }
+                    "isLocked" -> {
+                        result.success(LockState.restore(this))
+                    }
+                    "alarmCeilingMinutes" -> {
+                        result.success(AlarmPrefs.CEILING_MINUTES)
+                    }
+                    "drainPendingOutcomes" -> {
+                        // Alarms that ended while Dart wasn't running.
+                        result.success(PendingOutcomes.drain(this))
                     }
                     else -> result.notImplemented()
                 }

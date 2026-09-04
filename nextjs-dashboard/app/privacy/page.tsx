@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>Account data:</strong> email + display name + timezone +
-            role (patient / monitor).
+            and which side of MedBuddy the account is on.
           </li>
           <li>
             <strong>Medication schedule:</strong> name, daily reminder time,

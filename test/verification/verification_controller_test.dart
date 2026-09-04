@@ -249,7 +249,7 @@ void main() {
             status: ComplianceStatus.verified,
           ),
         );
-        when(() => lock.deactivate()).thenAnswer((_) async => true);
+        when(() => lock.stopAlarm()).thenAnswer((_) async {});
 
         final c = _container(
           face: _FakeFace(0.95),
@@ -280,7 +280,9 @@ void main() {
             ),
           ),
         ).called(1);
-        verify(() => lock.deactivate()).called(1);
+        // A verified dose must silence the alarm — this is the assertion
+        // that would catch the ringer being left going after a success.
+        verify(() => lock.stopAlarm()).called(1);
       },
     );
   });

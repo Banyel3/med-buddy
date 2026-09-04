@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dose alarm overlay.
+
+  Petal palette, not red. DESIGN.md's Red-Is-Red Rule reserves red for missed
+  doses and errors; this is a prompt, not a failure, and PRODUCT.md is explicit
+  that a medication loop must never use anxiety as a lever. The alarm is loud
+  enough on its own without the screen shouting too.
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CCAE2F34"
+    android:background="#F2E04D8C"
     android:clickable="true"
     android:focusable="true">
 
@@ -12,7 +20,8 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="32dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -21,35 +30,65 @@
             android:textSize="64sp"/>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/lock_title"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="Time to verify your dose"
             android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold"/>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="MedBuddy will return when you finish."
+            android:text="Take a photo with your pill to stop the alarm."
             android:textColor="#EEFFFFFF"
-            android:textSize="14sp"/>
+            android:textSize="15sp"/>
 
         <Button
-            android:id="@+id/lock_soft_skip"
+            android:id="@+id/lock_verify"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="28dp"
+            android:background="#FFFFFF"
+            android:paddingHorizontal="28dp"
+            android:paddingVertical="14dp"
+            android:text="Verify now"
+            android:textAllCaps="false"
+            android:textColor="#E04D8C"
+            android:textSize="15sp"
+            android:textStyle="bold"/>
+
+        <!--
+          The escape hatch. Always visible: someone out of medication, in
+          hospital, or driving has to be able to stop this. It is recorded,
+          not silent — the monitor is told they said they couldn't.
+        -->
+        <Button
+            android:id="@+id/lock_skip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:background="#33FFFFFF"
             android:paddingHorizontal="20dp"
             android:paddingVertical="12dp"
-            android:text="Skip for now (tap 5×)"
+            android:text="I can't take it now"
+            android:textAllCaps="false"
             android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:visibility="gone"/>
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/lock_countdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text=""
+            android:textColor="#CCFFFFFF"
+            android:textSize="13sp"/>
     </LinearLayout>
 </FrameLayout>

@@ -53,7 +53,7 @@ export default function LinkPatientForm() {
         disabled={busy || code.trim().length === 0}
         className="w-full bg-coral-gradient text-white font-semibold py-3 rounded-full shadow-lg disabled:opacity-50"
       >
-        {busy ? 'Linking…' : 'Link patient'}
+        {busy ? 'Linking…' : 'Link account'}
       </button>
     </form>
   );

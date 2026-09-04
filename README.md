@@ -29,7 +29,7 @@ violet. See `PRODUCT.md` for the reasoning and `DESIGN.md` for the tokens.
 # 2. Patient app
 cp .env.example .env          # fill SUPABASE_URL + SUPABASE_ANON_KEY
 flutter pub get
-flutter run --dart-define=MEDBUDDY_LOCK_MODE=soft
+flutter run --dart-define=MEDBUDDY_ALARM=off
 
 # 3. Monitor dashboard
 cd nextjs-dashboard
@@ -39,9 +39,10 @@ npm ci && npm run dev              # localhost:3000
 
 `.env` is a bundled Flutter asset — the app will not build without it.
 
-**Always develop with `MEDBUDDY_LOCK_MODE=soft`.** In `hard` mode the Android
-lock overlay is only dismissed by completing a verification, which is exactly
-as inconvenient as it sounds on a device you are debugging.
+**Always develop with `MEDBUDDY_ALARM=off`.** With the alarm on, the phone
+rings on the alarm channel 15 minutes after every dose time and only stops for
+a verified photo, the escape hatch, or a 5-minute timeout — exactly as
+inconvenient as it sounds on a device you are debugging.
 
 ## The pill model
 

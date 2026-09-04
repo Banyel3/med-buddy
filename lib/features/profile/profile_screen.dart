@@ -11,12 +11,27 @@ import '../../shared/providers/medication_provider.dart';
 import '../../shared/providers/supabase_providers.dart';
 import '../../shared/widgets/medbuddy_scaffold.dart';
 import '../../shared/widgets/primary_button.dart';
-import '../lock/lock_mode_provider.dart';
-import '../lock/services/accessibility_lock_service.dart';
+import '../lock/alarm_settings_provider.dart';
 import 'theme_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  static String _alarmSubtitle({
+    required bool enabled,
+    required bool envPinned,
+  }) {
+    if (envPinned) {
+      return 'Pinned by build flag / .env (MEDBUDDY_ALARM). '
+          'Unset to enable this toggle.';
+    }
+    if (!enabled) return 'Reminders only. Your phone stays quiet.';
+    return 'Rings until you verify your dose. Stops on its own after '
+        "5 minutes, and you can always say you can't take it right now.";
+  }
+
+  static ValueChanged<bool> _setAlarm(WidgetRef ref) =>
+      (v) => ref.read(alarmEnabledProvider.notifier).set(v);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,8 +39,12 @@ class ProfileScreen extends ConsumerWidget {
     final supaUser = ref.watch(currentSupabaseUserProvider);
     final meds = ref.watch(medicationsProvider).valueOrNull ?? const [];
     final themeMode = ref.watch(themeModeProvider);
-    final lockMode = ref.watch(lockModeProvider);
-    final lockEnvPinned = ref.read(lockModeProvider.notifier).envPinned;
+    final alarmEnabled = ref.watch(alarmEnabledProvider);
+    final alarmEnvPinned = ref.read(alarmEnabledProvider.notifier).envPinned;
+    final alarmSubtitle = _alarmSubtitle(
+      enabled: alarmEnabled,
+      envPinned: alarmEnvPinned,
+    );
     final linkCode = supaUser != null
         ? 'MB-${supaUser.id.substring(0, 6).toUpperCase()}'
         : 'MB-XXXXXX';
@@ -91,7 +110,7 @@ class ProfileScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Monitor link code',
+                              'Link code',
                               style: Theme.of(context).textTheme.labelLarge,
                             ),
                             Text(
@@ -126,7 +145,7 @@ class ProfileScreen extends ConsumerWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Full link code copied — paste into Monitor dashboard',
+                                'Link code copied — paste it into the web dashboard',
                               ),
                             ),
                           );
@@ -186,47 +205,15 @@ class ProfileScreen extends ConsumerWidget {
                         .read(themeModeProvider.notifier)
                         .set(v ? ThemeMode.dark : ThemeMode.light),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Lock style',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 4),
-                        SegmentedButton<LockMode>(
-                          segments: const [
-                            ButtonSegment(
-                              value: LockMode.hard,
-                              label: Text('Hard'),
-                              icon: Icon(Icons.lock_rounded),
-                            ),
-                            ButtonSegment(
-                              value: LockMode.soft,
-                              label: Text('Soft'),
-                              icon: Icon(Icons.lock_open_rounded),
-                            ),
-                          ],
-                          selected: {lockMode},
-                          onSelectionChanged: lockEnvPinned
-                              ? null
-                              : (s) => ref
-                                    .read(lockModeProvider.notifier)
-                                    .set(s.first),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          lockEnvPinned
-                              ? 'Pinned by build flag / .env (MEDBUDDY_LOCK_MODE). Unset to enable this toggle.'
-                              : lockMode == LockMode.hard
-                              ? 'Phone locks until you verify. Most effective.'
-                              : 'Phone locks but a "Skip" button can dismiss it after 5 taps.',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Dose alarm'),
+                    subtitle: Text(
+                      alarmSubtitle,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    value: alarmEnabled,
+                    onChanged: alarmEnvPinned ? null : _setAlarm(ref),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,

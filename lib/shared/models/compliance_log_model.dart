@@ -11,6 +11,11 @@ class ComplianceLogModel {
   final double? faceConfidence;
   final double? pillConfidence;
 
+  /// Set when the patient pressed "I can't take it now" on the dose alarm.
+  /// The status is still `missed` — the dose wasn't taken — but this tells the
+  /// monitor they responded rather than ignored it.
+  final DateTime? skippedAt;
+
   const ComplianceLogModel({
     required this.id,
     required this.medicationId,
@@ -21,6 +26,7 @@ class ComplianceLogModel {
     this.verifiedAt,
     this.faceConfidence,
     this.pillConfidence,
+    this.skippedAt,
   });
 
   factory ComplianceLogModel.fromJson(Map<String, dynamic> json) =>
@@ -38,6 +44,9 @@ class ComplianceLogModel {
             : DateTime.parse(json['verified_at'] as String),
         faceConfidence: (json['face_confidence'] as num?)?.toDouble(),
         pillConfidence: (json['pill_confidence'] as num?)?.toDouble(),
+        skippedAt: json['skipped_at'] == null
+            ? null
+            : DateTime.parse(json['skipped_at'] as String),
       );
 
   Map<String, dynamic> toJson() => {
@@ -51,6 +60,7 @@ class ComplianceLogModel {
     if (verifiedAt != null) 'verified_at': verifiedAt!.toIso8601String(),
     if (faceConfidence != null) 'face_confidence': faceConfidence,
     if (pillConfidence != null) 'pill_confidence': pillConfidence,
+    if (skippedAt != null) 'skipped_at': skippedAt!.toIso8601String(),
   };
 
   static ComplianceStatus _parseStatus(String? value) {

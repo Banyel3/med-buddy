@@ -10,6 +10,8 @@ export interface ComplianceLog {
   verified_at: string | null;
   face_confidence: number | null;
   pill_confidence: number | null;
+  /** Set when the patient pressed "I can't take it now" on the dose alarm. */
+  skipped_at: string | null;
 }
 
 export interface Streak {

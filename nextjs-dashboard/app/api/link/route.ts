@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "Paste the link code from the patient's mobile Profile tab — looks like MB-XXXXXX.",
+          "Paste the link code from their MedBuddy Profile tab — looks like MB-XXXXXX.",
       },
       { status: 400 },
     );
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          'No patient with that code. Make sure they signed up on the mobile app and copied the code from Profile.',
+          'No account with that code. Make sure they signed up on the mobile app and copied the code from their Profile tab.',
       },
       { status: 404 },
     );
@@ -64,14 +64,14 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          'That is your own account code. Sign up a separate account on the mobile app as the patient.',
+          'That is your own account code. The person you are following signs up separately, on the mobile app.',
       },
       { status: 400 },
     );
   }
   if (patient.role !== 'patient') {
     return NextResponse.json(
-      { error: 'That account is registered as a monitor, not a patient.' },
+      { error: 'That account is set up to follow someone, not to take medication.' },
       { status: 400 },
     );
   }

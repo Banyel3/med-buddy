@@ -76,4 +76,43 @@ void main() {
     });
     expect(back.medicationId, '');
   });
+
+  group('skippedAt', () {
+    test('omitted from toJson when the dose was not actively declined', () {
+      final json = ComplianceLogModel(
+        id: '',
+        medicationId: 'm',
+        userId: 'u',
+        date: DateTime.utc(2026, 5, 24),
+        status: ComplianceStatus.missed,
+      ).toJson();
+      expect(json.containsKey('skipped_at'), isFalse);
+    });
+
+    test('round-trips when the patient said they could not take it', () {
+      final at = DateTime.utc(2026, 5, 24, 8, 40);
+      final json = ComplianceLogModel(
+        id: '',
+        medicationId: 'm',
+        userId: 'u',
+        date: DateTime.utc(2026, 5, 24),
+        // A declined dose is still medically missed — skippedAt is what
+        // separates "they told us" from silence.
+        status: ComplianceStatus.missed,
+        skippedAt: at,
+      ).toJson();
+      expect(json['status'], 'missed');
+      expect(json['skipped_at'], at.toIso8601String());
+
+      final back = ComplianceLogModel.fromJson({
+        'medication_id': 'm',
+        'user_id': 'u',
+        'date': '2026-05-24',
+        'status': 'missed',
+        'skipped_at': at.toIso8601String(),
+      });
+      expect(back.skippedAt, at);
+      expect(back.status, ComplianceStatus.missed);
+    });
+  });
 }

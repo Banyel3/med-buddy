@@ -8,6 +8,7 @@ import 'core/constants/app_text_styles.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_client.dart';
+import 'features/lock/alarm_outcome_sync.dart';
 import 'features/lock/lock_gate.dart';
 import 'features/profile/theme_provider.dart';
 import 'shared/providers/medication_provider.dart';
@@ -42,6 +43,10 @@ class MedBuddyApp extends ConsumerWidget {
       final meds = next.valueOrNull;
       if (meds == null) return;
       NotificationService.instance.scheduleAllReminders(meds);
+      // An alarm may have ended (skipped, or hit its ceiling) while no Flutter
+      // engine was alive. Drain those into compliance_logs now that we have a
+      // signed-in user and a live connection.
+      ref.read(alarmOutcomeSyncProvider).drainAndLog();
     });
     return MaterialApp.router(
       title: 'MedBuddy',

@@ -421,45 +421,70 @@ psql_db -c "select status_code, content::text from net._http_response order by c
 
 ---
 
-## 11. Lock mode (hard vs. soft)
+## 11. Dose alarm
 
-Switching modes — three layers, highest wins:
+The alarm rings at `dose time + LockAlarmScheduler.ALARM_DELAY_MINUTES` (15)
+and gives up after `AlarmPrefs.CEILING_MINUTES` (5). Those two constants are
+the only tuning knobs; set the delay to 0 for a true alarm-at-dose-time.
+
+On/off — three layers, highest wins:
 
 ```
-1. Build flag         flutter run --dart-define=MEDBUDDY_LOCK_MODE=soft
-2. .env (mobile root) MEDBUDDY_LOCK_MODE=hard
-3. User toggle        Profile → Lock style (only enabled when 1 and 2 unset)
+1. Build flag         flutter run --dart-define=MEDBUDDY_ALARM=off
+2. .env (mobile root) MEDBUDDY_ALARM=off
+3. User toggle        Profile → Dose alarm (only enabled when 1 and 2 unset)
 ```
 
-Dev workflow: pin via build flag on your dev branch, ship prod builds with
-`MEDBUDDY_LOCK_MODE` unset so end users can change it themselves.
+**Keep it off on your dev machine.** A build that rings the device every 15
+minutes while you work gets uninstalled fast. Ship prod builds with
+`MEDBUDDY_ALARM` unset so end users can choose.
 
 ```bash
-# Force soft for QA builds
-flutter run -d emulator-5554 --dart-define=MEDBUDDY_LOCK_MODE=soft
+# Silent QA build
+flutter run -d emulator-5554 --dart-define=MEDBUDDY_ALARM=off
 
-# Force hard for production smoke
-flutter build apk --release --dart-define=MEDBUDDY_LOCK_MODE=hard
+# Production smoke, alarm on
+flutter build apk --release --dart-define=MEDBUDDY_ALARM=on
 
 # Per-machine override without rebuild
-echo 'MEDBUDDY_LOCK_MODE=soft' >> .env
+echo 'MEDBUDDY_ALARM=off' >> .env
 ```
 
-When env-pinned, the Profile Lock-style SegmentedButton disables with the
-hint "Pinned by build flag / .env".
+When env-pinned, the Profile "Dose alarm" switch disables with the hint
+"Pinned by build flag / .env".
 
-Lock alarm test (works on physical device only — emulator can't render
-TYPE_ACCESSIBILITY_OVERLAY reliably):
+Alarm test — **physical device only**. An emulator renders neither
+TYPE_ACCESSIBILITY_OVERLAY nor alarm-stream audio reliably.
 
 ```bash
-# 1. On device: Settings → Accessibility → MedBuddy → On
+# 1. Settings → Accessibility → MedBuddy → On
 # 2. Settings → Apps → MedBuddy → Display over other apps → Allow
 # 3. Settings → Apps → MedBuddy → Alarms & reminders → Allow (A12+)
-# 4. In app: add a med scheduled 2 minutes in the future
-# 5. Background the app. Wait 32 minutes (med_time + 30).
-# 6. Overlay should auto-appear, BACK / HOME bounce back.
-# 7. In SOFT mode: tap "Skip for now (tap 5×)" five times → overlay clears.
-# 8. In HARD mode: only completing verification clears it.
+# 4. Add a med scheduled 16 minutes out, alarm ON
+# 5. Lock the phone, screen off, face down, ringer muted
+# 6. At T+15: screen wakes, rings on STREAM_ALARM, vibrates, overlay covers
+# 7. Volume ramps to full over ~20s
+# 8. Verify the dose      → stops instantly, row = verified
+# 9. "I can't take it now" → stops, row = missed WITH skipped_at set
+# 10. Ignore it            → stops at exactly 5 min, row = missed
+# 11. Force-stop the app first, then repeat 5-6 — setAlarmClock still fires
+```
+
+Check the outcome reached the backend (see §1 for `$ANON`/`$PATIENT_JWT`):
+
+```bash
+curl -s "$SUPABASE_URL/rest/v1/compliance_logs?select=date,status,skipped_at&order=date.desc&limit=3"   -H "apikey: $ANON" -H "Authorization: Bearer $PATIENT_JWT" | jq
+```
+
+`skipped_at` non-null means the patient answered the alarm; null with
+`status=missed` means it rang out. The dashboard's TodayHero renders those two
+with different copy.
+
+Recovery if the alarm won't stop:
+
+```bash
+adb shell am force-stop com.medbuddy.medbuddy
+adb shell cmd notification post -S default X X   # or just toggle Accessibility off
 ```
 
 Recovery if lock gets stuck (no verification possible):

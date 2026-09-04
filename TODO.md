@@ -57,6 +57,7 @@ If an item and the code disagree, the code wins — fix the item.
 - [x] Email auth provider enabled
 - [x] Profile rows auto-created by the `handle_new_user` trigger
 - [ ] Re-run `schema.sql` for the new constraint + trigger (see §0)
+- [ ] Re-run `schema.sql` again for `compliance_logs.skipped_at` (dose alarm)
 
 ## 3. Edge Functions
 
@@ -82,6 +83,22 @@ If an item and the code disagree, the code wins — fix the item.
 - [ ] Lock on Samsung One UI (Knox) + Xiaomi MIUI / realme (autostart)
 - [ ] Emergency dialer + Settings → Accessibility still pass through
 - [ ] Dashboard live-updates when the patient verifies (Supabase Realtime)
+
+## 4b. Dose alarm — release blockers
+
+The alarm code is in, but Google Play gates two of the things it needs. Neither
+is a code change; both are manual declarations that must land before release.
+
+- [ ] **Play Console → Policy → App content → Full-screen intent.** Declare
+      `USE_FULL_SCREEN_INTENT` with a justification. Since Jan 2025 it is
+      default-granted only to calling and alarm apps; MedBuddy qualifies as an
+      alarm app, but undeclared apps get it revoked.
+- [ ] **Play Console → foreground service types.** Declare `specialUse` for
+      `LockOverlayService`, with a description and demo video.
+- [ ] Device-test on Samsung One UI (Knox) and Xiaomi MIUI / realme UI —
+      autostart and battery restrictions kill alarms there first.
+- [ ] Confirm the alarm survives a reboot (`setAlarmClock` is re-armed by the
+      receiver, but the first arm after boot comes from Dart).
 
 ## 5. Still needs external assets
 
