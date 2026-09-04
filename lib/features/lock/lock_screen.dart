@@ -135,17 +135,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                       // they couldn't.
                       TextButton(
                         onPressed: _skipping ? null : _skipDose,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.onPrimary,
+                        ),
                         child: Text(
                           _skipping ? 'Stopping…' : "I can't take it now",
-                          style: Theme.of(context).textTheme.labelLarge
-                              ?.copyWith(
-                                color: AppColors.onPrimary.withValues(
-                                  alpha: 0.9,
-                                ),
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppColors.onPrimary
-                                    .withValues(alpha: 0.5),
-                              ),
                         ),
                       ),
                     ],

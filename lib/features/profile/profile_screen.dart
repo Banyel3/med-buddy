@@ -18,6 +18,22 @@ import 'theme_provider.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
+  static String _alarmSubtitle({
+    required bool enabled,
+    required bool envPinned,
+  }) {
+    if (envPinned) {
+      return 'Pinned by build flag / .env (MEDBUDDY_ALARM). '
+          'Unset to enable this toggle.';
+    }
+    if (!enabled) return 'Reminders only. Your phone stays quiet.';
+    return 'Rings until you verify your dose. Stops on its own after '
+        "5 minutes, and you can always say you can't take it right now.";
+  }
+
+  static ValueChanged<bool> _setAlarm(WidgetRef ref) =>
+      (v) => ref.read(alarmEnabledProvider.notifier).set(v);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).valueOrNull;
@@ -26,6 +42,10 @@ class ProfileScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final alarmEnabled = ref.watch(alarmEnabledProvider);
     final alarmEnvPinned = ref.read(alarmEnabledProvider.notifier).envPinned;
+    final alarmSubtitle = _alarmSubtitle(
+      enabled: alarmEnabled,
+      envPinned: alarmEnvPinned,
+    );
     final linkCode = supaUser != null
         ? 'MB-${supaUser.id.substring(0, 6).toUpperCase()}'
         : 'MB-XXXXXX';
@@ -190,21 +210,11 @@ class ProfileScreen extends ConsumerWidget {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Dose alarm'),
                     subtitle: Text(
-                      alarmEnvPinned
-                          ? 'Pinned by build flag / .env (MEDBUDDY_ALARM). '
-                                'Unset to enable this toggle.'
-                          : alarmEnabled
-                          ? 'Rings until you verify your dose. Stops on its own '
-                                'after 5 minutes, and you can always say you '
-                                "can't take it right now."
-                          : 'Reminders only. Your phone stays quiet.',
+                      alarmSubtitle,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     value: alarmEnabled,
-                    onChanged: alarmEnvPinned
-                        ? null
-                        : (v) =>
-                              ref.read(alarmEnabledProvider.notifier).set(v),
+                    onChanged: alarmEnvPinned ? null : _setAlarm(ref),
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
