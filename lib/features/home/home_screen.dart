@@ -23,6 +23,9 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider).valueOrNull;
     final streak = ref.watch(streakProvider).valueOrNull;
     final medsAsync = ref.watch(medicationsProvider);
+    // The nearest-scheduled med, not `list.first`, so the card names the same
+    // medication the verification flow will credit.
+    final nextMed = ref.watch(nextMedicationProvider);
     final logs = ref.watch(complianceLogsProvider).valueOrNull ?? const [];
     final adherence = _AdherenceStats.fromLogs(logs);
     final isTablet = DeviceUtils.isTablet(context);
@@ -57,26 +60,20 @@ class HomeScreen extends ConsumerWidget {
               ],
               const SizedBox(height: AppDimensions.space24),
               medsAsync.when(
-                // `nextMedication` — not `list.first` — so the card names the
-                // same medication the verification flow will credit.
-                data: (_) {
-                  final med = ref.watch(nextMedicationProvider);
-                  if (med == null) {
-                    return _NoMedsCta(
-                      onAdd: () =>
-                          context.goNamed(AppRoute.onboardingMedication),
-                    );
-                  }
-                  return _MedicationCard(
-                    title: med.name,
-                    time: med.scheduleTime.format(context),
-                    onTake: () => context.goNamed(AppRoute.verification),
-                    onEdit: () => context.goNamed(
-                      AppRoute.medicationEdit,
-                      extra: med,
-                    ),
-                  );
-                },
+                data: (_) => nextMed == null
+                    ? _NoMedsCta(
+                        onAdd: () =>
+                            context.goNamed(AppRoute.onboardingMedication),
+                      )
+                    : _MedicationCard(
+                        title: nextMed.name,
+                        time: nextMed.scheduleTime.format(context),
+                        onTake: () => context.goNamed(AppRoute.verification),
+                        onEdit: () => context.goNamed(
+                          AppRoute.medicationEdit,
+                          extra: nextMed,
+                        ),
+                      ),
                 loading: () => const _MedSkeleton(),
                 error: (err, _) => _MedError(message: err.toString()),
               ),
