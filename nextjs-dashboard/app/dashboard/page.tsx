@@ -23,7 +23,8 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Role gate — patients land here when they sign in to the wrong surface.
+  // Role gate — mobile-app accounts land here when they sign in to the
+  // wrong surface.
   // Sign out + redirect to /login with a query flag so the form can render
   // a clear message; without the signOut() we'd loop via app/page.tsx
   // (which redirects authenticated users straight back to /dashboard).
@@ -37,7 +38,7 @@ export default async function DashboardPage() {
     redirect('/login?error=monitor_only');
   }
 
-  // Resolve linked patient(s) via monitor_links.
+  // Resolve the linked account via monitor_links.
   const { data: links } = await supabase
     .from('monitor_links')
     .select('patient_id')
@@ -81,9 +82,9 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">💊</span>
             <div>
-              <div className="font-extrabold text-ink">MedBuddy Monitor</div>
+              <div className="font-extrabold text-ink">MedBuddy</div>
               <div className="text-xs text-ink/60">
-                Watching: {patient?.name ?? 'Patient'}
+                {patient?.name ?? 'Not linked yet'}
               </div>
             </div>
           </div>
@@ -99,7 +100,7 @@ export default async function DashboardPage() {
         {latestMiss && (
           <MissAlert
             logId={latestMiss.id}
-            patientName={patient?.name ?? 'Patient'}
+            patientName={patient?.name ?? 'Your person'}
             missedAt={latestMiss.date}
           />
         )}
@@ -108,7 +109,7 @@ export default async function DashboardPage() {
           <TodayHero
             skippedAt={todayLog?.skipped_at ?? null}
             status={todayStatus}
-            patientName={patient?.name ?? 'Patient'}
+            patientName={patient?.name ?? 'Your person'}
           />
           <StreakWidget streak={streakRow} />
           <VelocityChart logs={allLogs.slice(0, 30)} />
@@ -167,18 +168,18 @@ function NoPatientLinked({ email }: { email: string }) {
         <div className="text-center space-y-2">
           <div className="text-5xl">🔗</div>
           <h1 className="text-2xl font-extrabold text-ink">
-            Link a patient
+            Link your person
           </h1>
           <p className="text-ink/70 text-sm">
             Signed in as <strong>{email}</strong>. Paste the link code
-            from your patient&apos;s MedBuddy profile.
+            from their MedBuddy Profile tab.
           </p>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 leading-relaxed">
-          <strong>Can&apos;t monitor your own account.</strong> Patient and
-          monitor have to be separate email accounts. Sign up the patient
-          on the mobile app first, then tap the copy icon on their Profile
-          tab to get the link code.
+          <strong>Can&apos;t follow your own account.</strong> The two
+          accounts need separate email addresses. They sign up on the mobile
+          app first, then tap the copy icon on their Profile tab to get the
+          link code.
         </div>
         <LinkPatientForm />
         <form action="/api/signout" method="post">

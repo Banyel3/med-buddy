@@ -16,7 +16,7 @@ export default function TodayHero({
 }: {
   status: ComplianceStatus | 'no-log';
   patientName: string;
-  /** ISO timestamp when the patient said they couldn't take this dose. */
+  /** ISO timestamp when they said they couldn't take this dose. */
   skippedAt?: string | null;
 }) {
   const map: Record<
@@ -43,8 +43,8 @@ export default function TodayHero({
     },
     missed: {
       label: 'Missed',
-      // A dose the patient actively declined reads very differently to a
-      // worried monitor than one that was simply never logged. Same status,
+      // A dose actively declined reads very differently to a worried
+      // reader than one that was simply never logged. Same status,
       // different sentence.
       sub: skippedAt
         ? `${patientName} said they couldn't take it at ${formatTime(skippedAt)}.`

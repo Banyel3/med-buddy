@@ -126,6 +126,13 @@ Read these before touching the relevant area:
 - **Secrets**: never commit `.env`, `.env.local`, or `SUPABASE_SERVICE_ROLE_KEY`.
   Edge Functions authenticate via `WEBHOOK_SECRET` with constant-time compare
   (`supabase/functions/_shared/security.ts`).
+- **Never say "patient" or "monitor" in user-facing copy.** They are role names
+  in the schema (`role`, `monitor_links`, `patient_id`) and fine in code and
+  docs, but plenty of people taking medication are not patients — contraception,
+  a two-week antibiotic course, a supplement. In copy: use their actual name
+  where the app knows it, otherwise "your person"; the dashboard side is "you",
+  not "the monitor". `PRODUCT.md` bans clinical language generally; this is the
+  specific case that keeps recurring.
 
 ## Testing
 

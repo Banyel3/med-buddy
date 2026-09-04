@@ -22,7 +22,7 @@ export default function LoginPage() {
 
 const ERROR_MESSAGES: Record<string, string> = {
   monitor_only:
-    "That account is a patient account. The dashboard is for monitors only — sign up a new monitor account, or sign in with a different email.",
+    "That account is set up on the mobile app for taking medication. This dashboard is the other side — create an account here, or sign in with a different email.",
 };
 
 function LoginForm() {
@@ -143,12 +143,12 @@ function LoginForm() {
           }}
           className="w-full border-2 border-primary text-primary font-semibold py-3 rounded-full hover:bg-primary/5"
         >
-          {isSignup ? 'Sign in instead' : 'Create monitor account'}
+          {isSignup ? 'Sign in instead' : 'Create an account'}
         </button>
         <p className="text-xs text-ink/60 text-center leading-relaxed">
-          Heads up: patients sign up on the <strong>mobile app</strong>.
-          You can&apos;t monitor your own account — the patient and
-          monitor must be separate email accounts.
+          Heads up: the person you&apos;re following signs up on the{' '}
+          <strong>mobile app</strong>. You can&apos;t follow your own
+          account &mdash; the two need separate email addresses.
         </p>
       </form>
     </main>

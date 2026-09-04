@@ -91,7 +91,7 @@ class ProfileScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Monitor link code',
+                              'Link code',
                               style: Theme.of(context).textTheme.labelLarge,
                             ),
                             Text(
@@ -126,7 +126,7 @@ class ProfileScreen extends ConsumerWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Full link code copied — paste into Monitor dashboard',
+                                'Link code copied — paste it into the web dashboard',
                               ),
                             ),
                           );
