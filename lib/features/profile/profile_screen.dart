@@ -12,7 +12,6 @@ import '../../shared/providers/supabase_providers.dart';
 import '../../shared/widgets/medbuddy_scaffold.dart';
 import '../../shared/widgets/primary_button.dart';
 import '../lock/alarm_settings_provider.dart';
-import '../lock/services/accessibility_lock_service.dart';
 import 'theme_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
