@@ -5,7 +5,3 @@ import '../../features/lock/services/accessibility_lock_service.dart';
 final lockServiceProvider = Provider<AccessibilityLockService>(
   (ref) => AccessibilityLockService.instance,
 );
-
-final accessibilityEnabledProvider = FutureProvider<bool>((ref) async {
-  return ref.read(lockServiceProvider).isAccessibilityEnabled();
-});

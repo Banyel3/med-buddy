@@ -36,6 +36,10 @@ Thumbs.db
 # Logs / misc
 *.log
 *.lock
+# ...but dependency lockfiles belong in the repo: this is an app, not a
+# library, so builds must be reproducible. CI cache keys hash these too.
+!pubspec.lock
+!ios/Podfile.lock
 *.swp
 .history/
 

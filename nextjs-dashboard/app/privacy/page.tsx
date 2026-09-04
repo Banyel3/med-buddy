@@ -21,8 +21,8 @@ export default function PrivacyPage() {
             role (patient / monitor).
           </li>
           <li>
-            <strong>Medication schedule:</strong> name, time, frequency,
-            notes you enter.
+            <strong>Medication schedule:</strong> name, daily reminder time,
+            and any notes you enter.
           </li>
           <li>
             <strong>Verification photos:</strong> still images captured at

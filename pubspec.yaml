@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
 
   # Backend
   supabase_flutter: ^2.5.6
@@ -22,29 +21,28 @@ dependencies:
   # UI / typography
   google_fonts: ^8.1.0
   intl: ^0.19.0
-  flutter_adaptive_scaffold: ^0.2.0
   responsive_framework: ^1.4.0
-  fl_chart: ^1.2.0
 
   # Camera + on-device AI (Phase 2)
   camera: ^0.11.0
   google_mlkit_face_detection: ^0.13.2
-  tflite_flutter: ^0.11.0
+  # 0.12 for IsolateInterpreter — inference must not run on the UI isolate.
+  tflite_flutter: ^0.12.0
   image: ^4.2.0
-  path_provider: ^2.1.4
 
-  # Notifications + background scheduling
+  # Notifications. Daily repeats are re-armed by the plugin's own boot
+  # receiver; the lock is armed by native AlarmManager (android/.../Lock*.kt).
+  # No background-worker package is involved — see NotificationService.
   flutter_local_notifications: ^17.2.2
-  workmanager: ^0.9.0+3
   timezone: ^0.9.4
   permission_handler: ^12.0.1
 
-  # Lock / overlay (Phase 3)
-  flutter_accessibility_service: ^1.0.0
-  flutter_overlay_window: ^0.4.5
-
-  # Local preferences (theme, timezone overrides)
+  # Local preferences (theme, lock mode)
   shared_preferences: ^2.3.2
+
+  # NOTE: the Phase 3 lock is native Kotlin behind the `medbuddy/lock`
+  # MethodChannel. Do not add flutter_accessibility_service or
+  # flutter_overlay_window back — they were never wired to anything.
 
 dev_dependencies:
   flutter_test:

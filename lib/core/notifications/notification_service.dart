@@ -8,7 +8,12 @@ import '../../shared/models/medication_model.dart';
 import 'schedule_math.dart';
 
 /// Wraps flutter_local_notifications + tz scheduling.
-/// Default schedule = 12:30 PM Asia/Manila (PRD §3.1, §4.2).
+///
+/// [scheduleAllReminders] is the only scheduling entry point — it is driven by
+/// the `medicationsProvider` listener in `main.dart`, so the notification set
+/// always mirrors the user's active medications. Daily repeats survive reboot
+/// via the plugin's own boot receiver (`RECEIVE_BOOT_COMPLETED`); no background
+/// worker is needed to re-arm them.
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
@@ -19,9 +24,6 @@ class NotificationService {
   static const _channelId = 'medbuddy_reminders';
   static const _channelName = 'Medication reminders';
   static const _channelDesc = 'Scheduled daily medication reminders';
-  static const reminderNotificationId = 1001;
-  static const escalationNotificationId = 1002;
-  static const lockNotificationId = 1003;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -55,12 +57,18 @@ class NotificationService {
     _initialized = true;
   }
 
-  Future<void> requestPermissions() async {
-    await _plugin
+  /// Asks for POST_NOTIFICATIONS (Android 13+). iOS permission is requested
+  /// by [init] via DarwinInitializationSettings. Call this at the moment the
+  /// user has just asked for a reminder so the OS prompt has context — the
+  /// system only offers it once.
+  Future<bool> requestPermissions() async {
+    await init();
+    final android = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
+        >();
+    if (android == null) return true; // iOS — granted at init.
+    return await android.requestNotificationsPermission() ?? false;
   }
 
   NotificationDetails get _details => const NotificationDetails(
@@ -80,49 +88,6 @@ class NotificationService {
       // Fire-and-forget — lock service is idempotent.
       AccessibilityLockService.instance.activate();
     }
-  }
-
-  Future<void> scheduleDailyReminder({
-    TimeOfDay time = const TimeOfDay(hour: 12, minute: 30),
-    String medName = 'your medication',
-  }) async {
-    await init();
-    await _plugin.zonedSchedule(
-      reminderNotificationId,
-      'Time for $medName 💊',
-      'Tap to verify and keep your streak going.',
-      ScheduleMath.nextInstanceOf(time, tz.local),
-      _details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-
-    await _plugin.zonedSchedule(
-      escalationNotificationId,
-      'Still waiting on you 👀',
-      "Take $medName when you're ready.",
-      ScheduleMath.nextInstanceOf(ScheduleMath.addMinutes(time, 15), tz.local),
-      _details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-
-    await _plugin.zonedSchedule(
-      lockNotificationId,
-      'Phone locking now 🔒',
-      'Verify your dose to unlock your phone.',
-      ScheduleMath.nextInstanceOf(ScheduleMath.addMinutes(time, 30), tz.local),
-      _details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: 'lock-activate',
-    );
   }
 
   /// Cancels every reminder and re-schedules one set per active medication.
@@ -193,11 +158,6 @@ class NotificationService {
         minute: med.scheduleTime.minute,
       );
     }
-  }
-
-  /// Arms the lock immediately — used by background trigger at T+30.
-  Future<void> armLockNow() async {
-    await AccessibilityLockService.instance.activate();
   }
 
   Future<void> cancelAll() => _plugin.cancelAll();

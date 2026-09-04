@@ -54,5 +54,26 @@ void main() {
     expect(json['face_confidence'], 0.92);
     expect(json['pill_confidence'], 0.81);
     expect(json.containsKey('id'), isFalse);
+    expect(json['medication_id'], 'm');
+  });
+
+  test('empty medicationId round-trips as SQL NULL, never as ""', () {
+    final json = ComplianceLogModel(
+      id: '',
+      medicationId: '',
+      userId: 'u',
+      date: DateTime.utc(2026, 5, 24),
+      status: ComplianceStatus.late,
+    ).toJson();
+    // Postgres rejects '' as a uuid — this must be null on the wire.
+    expect(json['medication_id'], isNull);
+
+    final back = ComplianceLogModel.fromJson({
+      'medication_id': null,
+      'user_id': 'u',
+      'date': '2026-05-24',
+      'status': 'late',
+    });
+    expect(back.medicationId, '');
   });
 }

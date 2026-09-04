@@ -57,20 +57,26 @@ class HomeScreen extends ConsumerWidget {
               ],
               const SizedBox(height: AppDimensions.space24),
               medsAsync.when(
-                data: (list) => list.isEmpty
-                    ? _NoMedsCta(
-                        onAdd: () =>
-                            context.goNamed(AppRoute.onboardingMedication),
-                      )
-                    : _MedicationCard(
-                        title: list.first.name,
-                        time: list.first.scheduleTime.format(context),
-                        onTake: () => context.goNamed(AppRoute.verification),
-                        onEdit: () => context.goNamed(
-                          AppRoute.medicationEdit,
-                          extra: list.first,
-                        ),
-                      ),
+                // `nextMedication` — not `list.first` — so the card names the
+                // same medication the verification flow will credit.
+                data: (_) {
+                  final med = ref.watch(nextMedicationProvider);
+                  if (med == null) {
+                    return _NoMedsCta(
+                      onAdd: () =>
+                          context.goNamed(AppRoute.onboardingMedication),
+                    );
+                  }
+                  return _MedicationCard(
+                    title: med.name,
+                    time: med.scheduleTime.format(context),
+                    onTake: () => context.goNamed(AppRoute.verification),
+                    onEdit: () => context.goNamed(
+                      AppRoute.medicationEdit,
+                      extra: med,
+                    ),
+                  );
+                },
                 loading: () => const _MedSkeleton(),
                 error: (err, _) => _MedError(message: err.toString()),
               ),

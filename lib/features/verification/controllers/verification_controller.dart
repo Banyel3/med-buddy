@@ -180,8 +180,9 @@ class VerificationController extends StateNotifier<VerificationState> {
 
   @override
   void dispose() {
-    _face.dispose();
-    _pill.dispose();
+    // Both release native handles asynchronously; nothing here awaits them.
+    unawaited(_face.dispose());
+    unawaited(_pill.dispose());
     super.dispose();
   }
 }

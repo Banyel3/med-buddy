@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/router/app_router.dart';
 import '../../shared/models/medication_model.dart';
 import '../../shared/providers/auth_provider.dart';
@@ -23,7 +24,6 @@ class _OnboardingMedicationScreenState
     extends ConsumerState<OnboardingMedicationScreen> {
   final _nameCtrl = TextEditingController();
   TimeOfDay _time = const TimeOfDay(hour: 12, minute: 30);
-  String _frequency = 'Daily';
   bool _saving = false;
   String? _error;
 
@@ -64,6 +64,11 @@ class _OnboardingMedicationScreenState
         createdAt: DateTime.now().toUtc(),
       );
       await ref.read(supabaseServiceProvider).createMedication(med);
+      // Ask for POST_NOTIFICATIONS here: the user has just picked a reminder
+      // time, so the OS prompt lands with obvious context. Android only offers
+      // it once. A refusal is not fatal — the app still works, reminders just
+      // stay silent until the user grants it in Settings.
+      await NotificationService.instance.requestPermissions();
       ref.invalidate(medicationsProvider);
       if (!mounted) return;
       context.goNamed(AppRoute.onboardingMonitor);
@@ -134,23 +139,6 @@ class _OnboardingMedicationScreenState
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppDimensions.space16),
-                  DropdownButtonFormField<String>(
-                    initialValue: _frequency,
-                    decoration: const InputDecoration(
-                      labelText: 'Frequency',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'Daily', child: Text('Daily')),
-                      DropdownMenuItem(
-                        value: 'Weekdays',
-                        child: Text('Weekdays'),
-                      ),
-                      DropdownMenuItem(value: 'Custom', child: Text('Custom')),
-                    ],
-                    onChanged: (v) => setState(() => _frequency = v ?? 'Daily'),
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: AppDimensions.space12),
