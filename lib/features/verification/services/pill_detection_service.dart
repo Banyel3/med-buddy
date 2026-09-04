@@ -13,6 +13,11 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 /// where the first 4 channels are bbox (cx, cy, w, h) and the rest
 /// are per-class confidences. seblful's model = 2 classes (capsules,
 /// tablets), so shape = [1, 6, 8400].
+///
+/// Both expensive steps run off the UI isolate: JPEG decode + resize +
+/// normalise (1.2M writes) via [compute], and inference via
+/// [IsolateInterpreter]. Doing either inline drops frames on the capture
+/// screen while the user is still looking at it.
 class PillDetectionService {
   PillDetectionService();
 
@@ -22,15 +27,21 @@ class PillDetectionService {
   static const _numAnchors = 8400;
 
   Interpreter? _interpreter;
+  IsolateInterpreter? _isolate;
   bool _loadFailed = false;
 
   Future<bool> ensureLoaded() async {
-    if (_interpreter != null) return true;
+    if (_isolate != null) return true;
     if (_loadFailed) return false;
+    Interpreter? interpreter;
     try {
-      _interpreter = await Interpreter.fromAsset(_modelAsset);
+      interpreter = await Interpreter.fromAsset(_modelAsset);
+      _isolate = await IsolateInterpreter.create(address: interpreter.address);
+      _interpreter = interpreter;
       return true;
     } catch (e) {
+      // Don't leak the native handle if only the isolate hand-off failed.
+      if (_interpreter == null) interpreter?.close();
       _loadFailed = true;
       debugPrint(
         'PillDetectionService: model not available ($e). '
@@ -44,72 +55,65 @@ class PillDetectionService {
     if (!await ensureLoaded()) return 0.0;
     try {
       final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return 0.0;
-      return _runInference(decoded);
+      final input = await compute(_preprocess, bytes);
+      if (input == null) return 0.0;
+
+      const channels = 4 + _numClasses;
+      final shaped = input.reshape([1, _inputSize, _inputSize, 3]);
+      final flat = Float32List(channels * _numAnchors);
+      final output = flat.reshape([1, channels, _numAnchors]);
+      await _isolate!.run(shaped, output);
+      return _bestClassConfidence(output);
     } catch (e, st) {
       debugPrint('PillDetectionService.detectFromFile error: $e\n$st');
       return 0.0;
     }
   }
 
-  double _runInference(img.Image image) {
-    final resized = img.copyResize(
-      image,
-      width: _inputSize,
-      height: _inputSize,
-      interpolation: img.Interpolation.linear,
-    );
-
-    // Tight Float32List fill — single allocation, no boxed doubles.
-    final flat = Float32List(_inputSize * _inputSize * 3);
-    var idx = 0;
-    for (var y = 0; y < _inputSize; y++) {
-      for (var x = 0; x < _inputSize; x++) {
-        final p = resized.getPixel(x, y);
-        flat[idx++] = p.r / 255.0;
-        flat[idx++] = p.g / 255.0;
-        flat[idx++] = p.b / 255.0;
-      }
-    }
-    final input = flat.reshape([1, _inputSize, _inputSize, 3]);
-    final output = Float32List(
-      1 * (4 + _numClasses) * _numAnchors,
-    ).reshape([1, 4 + _numClasses, _numAnchors]);
-
-    _interpreter!.run(input, output);
-
-    double best = 0.0;
+  /// `reshape` hands back nested lists whose innermost type is `List<double>`,
+  /// so index through `dynamic` — casting a row to `List<dynamic>` throws.
+  static double _bestClassConfidence(List<dynamic> output) {
+    var best = 0.0;
     for (var c = 4; c < 4 + _numClasses; c++) {
+      final dynamic row = output[0][c];
       for (var a = 0; a < _numAnchors; a++) {
-        final v = output[0][c][a] as double;
+        final v = row[a] as double;
         if (v > best) best = v;
       }
     }
     return best.clamp(0.0, 1.0).toDouble();
   }
 
-  /// Quick single-shot helper using image bytes (e.g. CameraImage JPEG).
-  Future<double> detectFromBytes(Uint8List bytes) async {
-    if (!await ensureLoaded()) return 0.0;
-    try {
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return 0.0;
-      return _runInference(decoded);
-    } catch (e) {
-      debugPrint('PillDetectionService.detectFromBytes error: $e');
-      return 0.0;
-    }
-  }
-
-  void dispose() {
+  Future<void> dispose() async {
+    await _isolate?.close();
+    _isolate = null;
     _interpreter?.close();
     _interpreter = null;
   }
+}
 
-  /// Returns a synthetic confidence when the model is missing — lets
-  /// developers smoke-test the full verification flow before dropping
-  /// pills_detection.tflite into assets/models. Debug builds only.
-  static double devFallbackConfidence({double when = 0.85}) =>
-      kDebugMode ? when : 0.0;
+/// Decode → 640x640 → RGB float32 [0,1], NHWC. Top-level so it can be handed
+/// to [compute]. Returns null when the bytes are not a decodable image.
+Float32List? _preprocess(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return null;
+  final resized = img.copyResize(
+    decoded,
+    width: PillDetectionService._inputSize,
+    height: PillDetectionService._inputSize,
+    interpolation: img.Interpolation.linear,
+  );
+
+  const size = PillDetectionService._inputSize;
+  final flat = Float32List(size * size * 3);
+  var idx = 0;
+  for (var y = 0; y < size; y++) {
+    for (var x = 0; x < size; x++) {
+      final p = resized.getPixel(x, y);
+      flat[idx++] = p.r / 255.0;
+      flat[idx++] = p.g / 255.0;
+      flat[idx++] = p.b / 255.0;
+    }
+  }
+  return flat;
 }

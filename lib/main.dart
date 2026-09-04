@@ -5,7 +5,6 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_text_styles.dart';
-import 'core/notifications/background_scheduler.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_client.dart';
@@ -24,7 +23,6 @@ Future<void> main() async {
 
   await SupabaseBootstrap.init();
   await NotificationService.instance.init();
-  await BackgroundScheduler.init();
 
   runApp(const ProviderScope(child: MedBuddyApp()));
 }

@@ -26,10 +26,6 @@ class SupabaseService {
     return row == null ? null : UserModel.fromJson(row);
   }
 
-  Future<void> upsertUser(UserModel user) async {
-    await _db.from('users').upsert(user.toJson());
-  }
-
   // ---- Medications
   Future<List<MedicationModel>> fetchMedications(String userId) async {
     final rows = await _db
@@ -132,13 +128,18 @@ class SupabaseService {
         .toList();
   }
 
+  /// Upsert, not insert: one row per medication per day. A retried
+  /// verification updates today's row instead of stacking duplicates on the
+  /// monitor's calendar. A row already 'verified' is protected by the
+  /// `compliance_logs_protect_verified` trigger, so a later failed attempt
+  /// cannot downgrade it.
   Future<ComplianceLogModel> writeLog(ComplianceLogModel log) async {
-    final inserted = await _db
+    final saved = await _db
         .from('compliance_logs')
-        .insert(log.toJson())
+        .upsert(log.toJson(), onConflict: 'user_id,medication_id,date')
         .select()
         .single();
-    return ComplianceLogModel.fromJson(inserted);
+    return ComplianceLogModel.fromJson(saved);
   }
 
   // ---- Streak
@@ -170,26 +171,5 @@ class SupabaseService {
         .from('verifications')
         .createSignedUrl(path, 60 * 60 * 24);
     return signed;
-  }
-
-  // ---- Realtime
-  RealtimeChannel watchLogs(
-    String userId,
-    void Function(Map<String, dynamic>) onChange,
-  ) {
-    return _db
-        .channel('compliance_logs:$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'compliance_logs',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (payload) => onChange(payload.newRecord),
-        )
-        .subscribe();
   }
 }

@@ -18,17 +18,3 @@ final complianceLogsProvider = FutureProvider<List<ComplianceLogModel>>((
         to: DateTime(now.year, now.month + 1, 0),
       );
 });
-
-final todayLogProvider = Provider<ComplianceLogModel?>((ref) {
-  final logs = ref.watch(complianceLogsProvider).valueOrNull;
-  if (logs == null) return null;
-  final now = DateTime.now();
-  for (final log in logs) {
-    if (log.date.year == now.year &&
-        log.date.month == now.month &&
-        log.date.day == now.day) {
-      return log;
-    }
-  }
-  return null;
-});

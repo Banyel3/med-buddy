@@ -53,6 +53,19 @@ create table if not exists public.compliance_logs (
 create index if not exists compliance_logs_user_date_idx
   on public.compliance_logs (user_id, date desc);
 
+-- One row per medication per day. Without this, every failed verification
+-- attempt inserted another 'late' row and the monitor's calendar filled with
+-- duplicates for a single dose. The client upserts on these three columns.
+-- NULLS NOT DISTINCT so the nullable medication_id still dedupes (PG15+).
+do $$
+begin
+  alter table public.compliance_logs
+    add constraint compliance_logs_one_per_med_per_day
+    unique nulls not distinct (user_id, medication_id, date);
+exception
+  when duplicate_table or duplicate_object then null;
+end $$;
+
 -- Streaks ---------------------------------------------------------
 create table if not exists public.streaks (
   id uuid primary key default uuid_generate_v4(),
@@ -112,6 +125,25 @@ drop trigger if exists compliance_logs_bump_streak on public.compliance_logs;
 create trigger compliance_logs_bump_streak
   after insert or update on public.compliance_logs
   for each row execute function public.bump_streak();
+
+-- A verified dose is final ------------------------------------------------
+-- Once a dose is verified, nothing may downgrade it: not a later failed
+-- verification attempt upserting 'late', not the daily-rollover job sweeping
+-- stale rows to 'missed'. Enforced here rather than in each caller so every
+-- writer is covered by the one rule.
+create or replace function public.protect_verified_log()
+returns trigger language plpgsql as $$
+begin
+  if old.status = 'verified' and new.status <> 'verified' then
+    return old;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists compliance_logs_protect_verified on public.compliance_logs;
+create trigger compliance_logs_protect_verified
+  before update on public.compliance_logs
+  for each row execute function public.protect_verified_log();
 
 -- Row Level Security ---------------------------------------------
 alter table public.users enable row level security;

@@ -26,7 +26,9 @@ class ComplianceLogModel {
   factory ComplianceLogModel.fromJson(Map<String, dynamic> json) =>
       ComplianceLogModel(
         id: (json['id'] as String?) ?? '',
-        medicationId: json['medication_id'] as String,
+        // medication_id is nullable in the schema (a log can outlive a
+        // hard-deleted med). Empty string is the in-Dart stand-in for NULL.
+        medicationId: (json['medication_id'] as String?) ?? '',
         userId: json['user_id'] as String,
         date: DateTime.parse(json['date'] as String),
         status: _parseStatus(json['status'] as String?),
@@ -40,7 +42,8 @@ class ComplianceLogModel {
 
   Map<String, dynamic> toJson() => {
     if (id.isNotEmpty) 'id': id,
-    'medication_id': medicationId,
+    // Send NULL, not '' — Postgres rejects '' as a uuid.
+    'medication_id': medicationId.isEmpty ? null : medicationId,
     'user_id': userId,
     'date': date.toIso8601String().substring(0, 10),
     'status': status.name,

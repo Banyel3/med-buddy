@@ -28,8 +28,6 @@ class _FakeFace implements FaceDetectionService {
   @override
   Future<double> detectFromFile(String path) async => value;
   @override
-  Future<double> detectFromCameraImage(image, camera) async => value;
-  @override
   Future<void> dispose() async {}
 }
 
@@ -41,9 +39,7 @@ class _FakePill implements PillDetectionService {
   @override
   Future<double> detectFromFile(String path) async => value;
   @override
-  Future<double> detectFromBytes(bytes) async => value;
-  @override
-  void dispose() {}
+  Future<void> dispose() async {}
 }
 
 class _MockSupabaseService extends Mock implements SupabaseService {}

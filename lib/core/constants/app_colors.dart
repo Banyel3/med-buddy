@@ -35,12 +35,6 @@ class AppColors {
     colors: [Color(0xFFFFB6CB), Color(0xFFE04D8C)],
   );
 
-  static const LinearGradient softSurfaceGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFFFFF7FA), Color(0xFFF7E9EE)],
-  );
-
   static ColorScheme get lightScheme => const ColorScheme(
     brightness: Brightness.light,
     primary: primary,
