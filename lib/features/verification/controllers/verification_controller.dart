@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/compliance_log_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/compliance_provider.dart';
+import '../../../shared/providers/streak_provider.dart';
 import '../../../shared/providers/lock_provider.dart';
 import '../../../shared/providers/medication_provider.dart';
 import '../../../shared/providers/supabase_providers.dart';
@@ -167,6 +169,10 @@ class VerificationController extends StateNotifier<VerificationState> {
       await lockSvc.stopAlarm();
       // Cancel today's alarm for this med so it doesn't re-arm later today.
       if (med != null) await lockSvc.cancelLockAlarm(med.id);
+      // Home/History read these; without a refetch they keep showing the
+      // pre-dose streak and adherence until the next cold start.
+      _ref.invalidate(streakProvider);
+      _ref.invalidate(complianceLogsProvider);
       state = state.copyWith(submitting: false);
       return true;
     } catch (e, st) {

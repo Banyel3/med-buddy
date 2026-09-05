@@ -45,7 +45,7 @@ class MedicationModel {
         '${_pad(scheduleTime.hour)}:${_pad(scheduleTime.minute)}:00',
     'notes': notes,
     'active': active,
-    'created_at': createdAt.toIso8601String(),
+    'created_at': createdAt.toUtc().toIso8601String(),
   };
 
   static String _pad(int n) => n.toString().padLeft(2, '0');

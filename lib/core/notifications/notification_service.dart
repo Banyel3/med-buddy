@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -96,6 +97,18 @@ class NotificationService {
     // deleted / deactivated meds stop locking the device.
     await AccessibilityLockService.instance.cancelAllLockAlarms();
     for (final med in meds.where((m) => m.active)) {
+      try {
+        await _scheduleOne(med);
+      } catch (e, st) {
+        // cancelAll() already ran; a throw here would leave every later med
+        // with neither reminder nor alarm. Log and keep going.
+        debugPrint('scheduleAllReminders: ${med.name} failed: $e\n$st');
+      }
+    }
+  }
+
+  Future<void> _scheduleOne(MedicationModel med) async {
+    {
       final base = med.id.hashCode & 0x7FFFFFFF; // positive 31-bit
       final remindAt = ScheduleMath.nextInstanceOf(med.scheduleTime, tz.local);
       await _plugin.zonedSchedule(

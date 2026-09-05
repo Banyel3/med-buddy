@@ -9,6 +9,7 @@ import 'core/notifications/notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_client.dart';
 import 'features/lock/alarm_outcome_sync.dart';
+import 'features/lock/alarm_settings_provider.dart';
 import 'features/lock/lock_gate.dart';
 import 'features/profile/theme_provider.dart';
 import 'shared/providers/medication_provider.dart';
@@ -35,6 +36,10 @@ class MedBuddyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    // Instantiate eagerly: the controller pushes MEDBUDDY_ALARM (build flag /
+    // .env) into native SharedPreferences. Before this it was only created
+    // when Profile was opened, so lock alarms were armed with the pin unset.
+    ref.watch(alarmEnabledProvider);
 
     // Re-schedule local reminders whenever the medication list changes
     // (boot, after create/edit/delete). Keeps notification IDs in sync with
