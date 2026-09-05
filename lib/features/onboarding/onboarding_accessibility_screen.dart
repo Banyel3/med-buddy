@@ -65,9 +65,9 @@ class _OnboardingAccessibilityScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Almost done'),
         elevation: 0,
       ),
@@ -144,10 +144,12 @@ class _PermRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           border: Border.all(
-            color: granted ? AppColors.secondary : AppColors.outline,
+            color: granted
+                ? AppColors.secondary
+                : Theme.of(context).colorScheme.outline,
             width: granted ? 2 : 1,
           ),
         ),
@@ -178,7 +180,9 @@ class _PermRow extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: granted
                       ? AppColors.secondary
-                      : AppColors.onSurface.withValues(alpha: 0.6),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
           ],

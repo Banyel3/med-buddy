@@ -21,35 +21,39 @@ class HistoryScreen extends ConsumerWidget {
 
     final body = SingleChildScrollView(
       padding: pagePadding(context),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _StreakHero(
-              current: streak?.currentStreak ?? 0,
-              longest: streak?.longestStreak ?? 0,
-            ),
-            const SizedBox(height: AppDimensions.space24),
-            if (isTablet)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      // Center: a bare ConstrainedBox under a stretching scroll view gets a
+      // tight width and the cap is ignored on tablets.
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _StreakHero(
+                current: streak?.currentStreak ?? 0,
+                longest: streak?.longestStreak ?? 0,
+              ),
+              const SizedBox(height: AppDimensions.space24),
+              if (isTablet)
+                // No IntrinsicHeight here: the calendar's shrink-wrapped
+                // GridView cannot report an intrinsic height and asserts.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: _MonthlyRing(rate: _monthRate(logs))),
                     const SizedBox(width: AppDimensions.space20),
                     Expanded(flex: 2, child: _ComplianceCalendar(logs: logs)),
                   ],
-                ),
-              )
-            else ...[
-              _MonthlyRing(rate: _monthRate(logs)),
-              const SizedBox(height: AppDimensions.space16),
-              _ComplianceCalendar(logs: logs),
+                )
+              else ...[
+                _MonthlyRing(rate: _monthRate(logs)),
+                const SizedBox(height: AppDimensions.space16),
+                _ComplianceCalendar(logs: logs),
+              ],
+              const SizedBox(height: AppDimensions.space24),
+              _LogList(logs: logs),
             ],
-            const SizedBox(height: AppDimensions.space24),
-            _LogList(logs: logs),
-          ],
+          ),
         ),
       ),
     );
@@ -133,7 +137,7 @@ class _MonthlyRing extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
       child: Column(
@@ -152,7 +156,7 @@ class _MonthlyRing extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: rate,
                     strokeWidth: 14,
-                    backgroundColor: AppColors.surface,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                     color: AppColors.secondary,
                   ),
                 ),
@@ -178,9 +182,9 @@ class _ComplianceCalendar extends StatelessWidget {
   final List<ComplianceLogModel> logs;
   const _ComplianceCalendar({required this.logs});
 
-  Color _colorFor(DateTime day) {
+  Color _colorFor(DateTime day, ColorScheme cs) {
     final now = DateTime.now();
-    if (day.isAfter(now)) return AppColors.surface;
+    if (day.isAfter(now)) return cs.surface;
     final log = logs.firstWhere(
       (l) =>
           l.date.year == day.year &&
@@ -200,9 +204,9 @@ class _ComplianceCalendar extends StatelessWidget {
       case ComplianceStatus.late:
         return AppColors.warning;
       case ComplianceStatus.missed:
-        return AppColors.outline.withValues(alpha: 0.5);
+        return cs.outline.withValues(alpha: 0.5);
       case ComplianceStatus.pending:
-        return AppColors.surface;
+        return cs.surface;
     }
   }
 
@@ -212,7 +216,7 @@ class _ComplianceCalendar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
       child: Column(
@@ -234,17 +238,22 @@ class _ComplianceCalendar extends StatelessWidget {
               final day = days[i];
               return Container(
                 decoration: BoxDecoration(
-                  color: _colorFor(day),
+                  color: _colorFor(day, Theme.of(context).colorScheme),
                   borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                  border: Border.all(color: AppColors.outline, width: 0.5),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 0.5,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   '${day.day}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: day.isAfter(DateTime.now())
-                        ? AppColors.onSurface.withValues(alpha: 0.4)
-                        : AppColors.onSurface,
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.4)
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               );
@@ -258,7 +267,9 @@ class _ComplianceCalendar extends StatelessWidget {
               _LegendDot(color: AppColors.warning, label: 'Late'),
               const SizedBox(width: 12),
               _LegendDot(
-                color: AppColors.outline.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.5),
                 label: 'Missed',
               ),
             ],
@@ -301,7 +312,7 @@ class _LogList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
       child: Column(
@@ -347,7 +358,7 @@ class _LogRow extends StatelessWidget {
         label = 'Missed';
         break;
       case ComplianceStatus.pending:
-        badgeColor = AppColors.outline;
+        badgeColor = Theme.of(context).colorScheme.outline;
         label = 'Pending';
         break;
     }

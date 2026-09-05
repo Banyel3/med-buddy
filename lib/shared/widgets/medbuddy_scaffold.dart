@@ -58,21 +58,21 @@ class MedBuddyScaffold extends StatelessWidget {
 
     if (isTablet) {
       return Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: Row(
           children: [
             NavigationRail(
               selectedIndex: _selectedIndex,
               onDestinationSelected: (i) => _go(context, i),
               labelType: NavigationRailLabelType.all,
-              backgroundColor: AppColors.surface,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               indicatorColor: AppColors.primary.withValues(alpha: 0.12),
               selectedIconTheme: const IconThemeData(
                 color: AppColors.primary,
                 size: 28,
               ),
-              unselectedIconTheme: const IconThemeData(
-                color: AppColors.onSurface,
+              unselectedIconTheme: IconThemeData(
+                color: Theme.of(context).colorScheme.onSurface,
                 size: 24,
               ),
               destinations: _destinations
@@ -85,7 +85,10 @@ class MedBuddyScaffold extends StatelessWidget {
                   )
                   .toList(),
             ),
-            const VerticalDivider(width: 1, color: AppColors.outline),
+            VerticalDivider(
+              width: 1,
+              color: Theme.of(context).colorScheme.outline,
+            ),
             Expanded(child: child),
           ],
         ),
@@ -93,19 +96,22 @@ class MedBuddyScaffold extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => _go(context, i),
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         indicatorColor: AppColors.primary.withValues(alpha: 0.12),
         elevation: 0,
         height: 72,
         destinations: _destinations
             .map(
               (d) => NavigationDestination(
-                icon: Icon(d.icon, color: AppColors.onSurface),
+                icon: Icon(
+                  d.icon,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 selectedIcon: Icon(d.activeIcon, color: AppColors.primary),
                 label: d.label,
               ),
