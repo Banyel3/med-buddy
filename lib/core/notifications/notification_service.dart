@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -28,7 +29,16 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
     tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Manila'));
+    // Reminders are wall-clock times on the *device*. Pinning Manila here
+    // fired them 8h off for anyone else; fall back to Manila only if the
+    // platform can't tell us.
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(info.identifier));
+    } catch (e) {
+      debugPrint('NotificationService: device timezone unavailable ($e)');
+      tz.setLocalLocation(tz.getLocation('Asia/Manila'));
+    }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
