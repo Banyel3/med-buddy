@@ -24,8 +24,27 @@ final nextMedicationProvider = Provider<MedicationModel?>((ref) {
   if (meds == null) return null;
   final active = meds.where((m) => m.active).toList();
   if (active.isEmpty) return null;
-  final now = TimeOfDay.fromDateTime(DateTime.now());
-  return nearestScheduled(active, now);
+  // Recompute once a minute. A plain Provider samples the clock once and
+  // would otherwise credit the 08:00 medication all day.
+  final now = ref.watch(minuteTickProvider).valueOrNull ?? DateTime.now();
+  return nearestScheduled(active, TimeOfDay.fromDateTime(now));
+});
+
+/// Emits the current time every minute, aligned to the minute boundary.
+final minuteTickProvider = StreamProvider<DateTime>((ref) async* {
+  yield DateTime.now();
+  while (true) {
+    final now = DateTime.now();
+    final next = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+    ).add(const Duration(minutes: 1));
+    await Future<void>.delayed(next.difference(now));
+    yield DateTime.now();
+  }
 });
 
 /// Picks the medication scheduled nearest to [now] on a wrap-around clock.

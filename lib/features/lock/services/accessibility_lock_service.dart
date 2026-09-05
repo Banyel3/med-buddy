@@ -119,6 +119,22 @@ class AccessibilityLockService {
     }
   }
 
+  /// Ask native whether a dose alarm is live and mirror it into
+  /// [lockedNotifier] so [LockGate] shows the in-app lock. Called at startup
+  /// and on every resume: the overlay's "Verify now" drops the native window
+  /// and launches the app, and this is what puts the lock screen in front.
+  Future<bool> syncLockState() async {
+    if (!_isAndroid) return lockedNotifier.value;
+    try {
+      final locked = await _channel.invokeMethod<bool>('isLocked') ?? false;
+      lockedNotifier.value = locked;
+      return locked;
+    } catch (e) {
+      debugPrint('syncLockState error: $e');
+      return lockedNotifier.value;
+    }
+  }
+
   /// Silence a ringing alarm. Called the moment a dose is verified.
   Future<void> stopAlarm() async {
     lockedNotifier.value = false;
