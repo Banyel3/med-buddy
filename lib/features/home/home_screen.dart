@@ -7,6 +7,7 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/date_utils.dart';
 import '../../core/utils/device_utils.dart';
+import '../../core/utils/friendly_errors.dart';
 import '../../shared/models/compliance_log_model.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/compliance_provider.dart';
@@ -33,51 +34,63 @@ class HomeScreen extends ConsumerWidget {
     return SafeArea(
       child: SingleChildScrollView(
         padding: pagePadding(context),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Greeting(name: user?.name ?? 'friend'),
-              const SizedBox(height: AppDimensions.space24),
-              if (isTablet)
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _StreakCard(streak: streak?.currentStreak ?? 0),
-                      ),
-                      const SizedBox(width: AppDimensions.space20),
-                      Expanded(child: _AdherenceCard(stats: adherence)),
-                    ],
-                  ),
-                )
-              else ...[
-                _StreakCard(streak: streak?.currentStreak ?? 0),
-                const SizedBox(height: AppDimensions.space16),
-                _AdherenceCard(stats: adherence),
-              ],
-              const SizedBox(height: AppDimensions.space24),
-              medsAsync.when(
-                data: (_) => nextMed == null
-                    ? _NoMedsCta(
-                        onAdd: () =>
-                            context.goNamed(AppRoute.onboardingMedication),
-                      )
-                    : _MedicationCard(
-                        title: nextMed.name,
-                        time: nextMed.scheduleTime.format(context),
-                        onTake: () => context.goNamed(AppRoute.verification),
-                        onEdit: () => context.goNamed(
-                          AppRoute.medicationEdit,
-                          extra: nextMed,
+        // Center: a bare ConstrainedBox under a stretching scroll view gets a
+        // tight width and the cap is ignored on tablets.
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _Greeting(name: user?.name ?? 'friend'),
+                const SizedBox(height: AppDimensions.space24),
+                if (isTablet)
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _StreakCard(
+                            streak: streak?.currentStreak ?? 0,
+                          ),
                         ),
-                      ),
-                loading: () => const _MedSkeleton(),
-                error: (err, _) => _MedError(message: err.toString()),
-              ),
-            ],
+                        const SizedBox(width: AppDimensions.space20),
+                        Expanded(child: _AdherenceCard(stats: adherence)),
+                      ],
+                    ),
+                  )
+                else ...[
+                  _StreakCard(streak: streak?.currentStreak ?? 0),
+                  const SizedBox(height: AppDimensions.space16),
+                  _AdherenceCard(stats: adherence),
+                ],
+                const SizedBox(height: AppDimensions.space24),
+                medsAsync.when(
+                  data: (_) => nextMed == null
+                      ? _NoMedsCta(
+                          onAdd: () =>
+                              context.pushNamed(AppRoute.medicationEdit),
+                        )
+                      : _MedicationCard(
+                          title: nextMed.name,
+                          time: nextMed.scheduleTime.format(context),
+                          // push, not go: these are top-level routes and must
+                          // keep Home underneath so pop() has somewhere to land.
+                          onTake: () =>
+                              context.pushNamed(AppRoute.verification),
+                          onEdit: () => context.pushNamed(
+                            AppRoute.medicationEdit,
+                            extra: nextMed,
+                          ),
+                        ),
+                  loading: () => const _MedSkeleton(),
+                  error: (err, _) => _MedError(
+                    message: friendlyError(err),
+                    onRetry: () => ref.invalidate(medicationsProvider),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -108,7 +121,9 @@ class _Greeting extends StatelessWidget {
         Text(
           AppDateUtils.formatDate(DateTime.now()),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -177,7 +192,7 @@ class _MedSkeleton extends StatelessWidget {
     return Container(
       height: 160,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
       child: const Center(
@@ -189,13 +204,14 @@ class _MedSkeleton extends StatelessWidget {
 
 class _MedError extends StatelessWidget {
   final String message;
-  const _MedError({required this.message});
+  final VoidCallback onRetry;
+  const _MedError({required this.message, required this.onRetry});
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
       ),
@@ -212,6 +228,12 @@ class _MedError extends StatelessWidget {
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+          ),
+          const SizedBox(height: AppDimensions.space12),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Try again'),
           ),
         ],
       ),
@@ -257,7 +279,7 @@ class _AdherenceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
       child: Column(
@@ -286,7 +308,7 @@ class _AdherenceCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: stats.hasData ? stats.progress : 0,
               minHeight: 14,
-              backgroundColor: AppColors.surface,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               color: AppColors.secondary,
             ),
           ),
@@ -312,9 +334,12 @@ class _NoMedsCta extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.space24),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(color: AppColors.outline, width: 1),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,9 +388,12 @@ class _MedicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(color: AppColors.outline, width: 1),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+          width: 1,
+        ),
       ),
       child: Material(
         type: MaterialType.transparency,
@@ -409,9 +437,12 @@ class _MedicationCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.edit_outlined,
-                      color: AppColors.outline,
+                      // outline-on-container was ~1.2:1 contrast; this reads in both themes.
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.55),
                       size: 20,
                     ),
                   ],

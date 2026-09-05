@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/router/nav_utils.dart';
 
 class CreditsScreen extends StatelessWidget {
   const CreditsScreen({super.key});
@@ -47,7 +47,7 @@ class CreditsScreen extends StatelessWidget {
         title: const Text('Credits & licenses'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrHome(),
         ),
       ),
       body: SafeArea(
@@ -69,7 +69,9 @@ class CreditsScreen extends StatelessWidget {
             Text(
               'See LICENSE files in the source repository for full terms.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],

@@ -53,188 +53,226 @@ class ProfileScreen extends ConsumerWidget {
     return SafeArea(
       child: SingleChildScrollView(
         padding: pagePadding(context),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Profile', style: Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height: AppDimensions.space24),
-              _Card(
-                children: [
-                  _Row(
-                    icon: Icons.person_rounded,
-                    label: 'Name',
-                    value: user?.name.isNotEmpty == true ? user!.name : '—',
-                    onTap: supaUser == null
-                        ? null
-                        : () => _editName(
-                            context,
-                            ref,
-                            userId: supaUser.id,
-                            current: user?.name ?? '',
-                          ),
-                  ),
-                  _Row(
-                    icon: Icons.email_rounded,
-                    label: 'Email',
-                    value: supaUser?.email ?? '—',
-                  ),
-                  _Row(
-                    icon: Icons.language_rounded,
-                    label: 'Timezone',
-                    value: user?.timezone ?? 'Asia/Manila',
-                    onTap: supaUser == null
-                        ? null
-                        : () => _editTimezone(
-                            context,
-                            ref,
-                            userId: supaUser.id,
-                            current: user?.timezone ?? 'Asia/Manila',
-                          ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.space16),
-              _Card(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.qr_code_rounded,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: AppDimensions.space12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Link code',
-                              style: Theme.of(context).textTheme.labelLarge,
+        // Center: a bare ConstrainedBox under a stretching scroll view gets a
+        // tight width and the cap is ignored on tablets.
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Profile',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                const SizedBox(height: AppDimensions.space24),
+                _Card(
+                  children: [
+                    _Row(
+                      icon: Icons.person_rounded,
+                      label: 'Name',
+                      value: user?.name.isNotEmpty == true ? user!.name : '—',
+                      onTap: supaUser == null
+                          ? null
+                          : () => _editName(
+                              context,
+                              ref,
+                              userId: supaUser.id,
+                              current: user?.name ?? '',
                             ),
-                            Text(
-                              linkCode,
-                              style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    _Row(
+                      icon: Icons.email_rounded,
+                      label: 'Email',
+                      value: supaUser?.email ?? '—',
+                    ),
+                    _Row(
+                      icon: Icons.language_rounded,
+                      label: 'Timezone',
+                      value: user?.timezone ?? 'Asia/Manila',
+                      onTap: supaUser == null
+                          ? null
+                          : () => _editTimezone(
+                              context,
+                              ref,
+                              userId: supaUser.id,
+                              current: user?.timezone ?? 'Asia/Manila',
                             ),
-                            if (linkCodeFull.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                _Card(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.qr_code_rounded,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: AppDimensions.space12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                'or paste: $linkCodeFull',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      fontFamily: 'monospace',
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.color
-                                          ?.withValues(alpha: 0.7),
-                                    ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                'Link code',
+                                style: Theme.of(context).textTheme.labelLarge,
                               ),
+                              Text(
+                                linkCode,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                              if (linkCodeFull.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'or paste: $linkCodeFull',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontFamily: 'monospace',
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.color
+                                            ?.withValues(alpha: 0.7),
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.copy_rounded),
-                        tooltip: 'Copy full link code',
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: linkCodeFull));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Link code copied — paste it into the web dashboard',
+                        IconButton(
+                          icon: const Icon(Icons.copy_rounded),
+                          tooltip: 'Copy full link code',
+                          onPressed: () {
+                            Clipboard.setData(
+                              ClipboardData(text: linkCodeFull),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Link code copied — paste it into the web dashboard',
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.space16),
-              _Card(
-                children: [
-                  Text(
-                    'Medications',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppDimensions.space12),
-                  if (meds.isEmpty)
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                _Card(
+                  children: [
                     Text(
-                      'No medications yet.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    )
-                  else
-                    ...meds.map(
-                      (m) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.medication_rounded,
-                              color: AppColors.primary,
+                      'Medications',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppDimensions.space12),
+                    if (meds.isEmpty)
+                      Text(
+                        'No medications yet.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    else
+                      ...meds.map(
+                        (m) => InkWell(
+                          onTap: () => context.pushNamed(
+                            AppRoute.medicationEdit,
+                            extra: m,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.medication_rounded,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(child: Text(m.name)),
+                                Text(
+                                  m.scheduleTime.format(context),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Theme.of(context).colorScheme.outline,
+                                  size: 18,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(child: Text(m.name)),
-                            Text(
-                              m.scheduleTime.format(context),
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
+                    const SizedBox(height: AppDimensions.space8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () =>
+                            context.pushNamed(AppRoute.medicationEdit),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Add medication'),
+                      ),
                     ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.space16),
-              _Card(
-                children: [
-                  Text(
-                    'Preferences',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Dark mode'),
-                    value: themeMode == ThemeMode.dark,
-                    onChanged: (v) => ref
-                        .read(themeModeProvider.notifier)
-                        .set(v ? ThemeMode.dark : ThemeMode.light),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Dose alarm'),
-                    subtitle: Text(
-                      alarmSubtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.space16),
+                _Card(
+                  children: [
+                    Text(
+                      'Preferences',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    value: alarmEnabled,
-                    onChanged: alarmEnvPinned ? null : _setAlarm(ref),
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.info_outline_rounded),
-                    title: const Text('Credits & licenses'),
-                    onTap: () => context.goNamed(AppRoute.credits),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.space24),
-              PrimaryButton(
-                label: 'Sign out',
-                icon: Icons.logout_rounded,
-                gradient: false,
-                onPressed: () async {
-                  await ref.read(authControllerProvider.notifier).signOut();
-                  if (context.mounted) context.goNamed(AppRoute.login);
-                },
-              ),
-            ],
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Dark mode'),
+                      value:
+                          themeMode == ThemeMode.dark ||
+                          (themeMode == ThemeMode.system &&
+                              MediaQuery.platformBrightnessOf(context) ==
+                                  Brightness.dark),
+                      onChanged: (v) => ref
+                          .read(themeModeProvider.notifier)
+                          .set(v ? ThemeMode.dark : ThemeMode.light),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Dose alarm'),
+                      subtitle: Text(
+                        alarmSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      value: alarmEnabled,
+                      onChanged: alarmEnvPinned ? null : _setAlarm(ref),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.info_outline_rounded),
+                      title: const Text('Credits & licenses'),
+                      onTap: () => context.pushNamed(AppRoute.credits),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDimensions.space24),
+                PrimaryButton(
+                  label: 'Sign out',
+                  icon: Icons.logout_rounded,
+                  gradient: false,
+                  onPressed: () async {
+                    await ref.read(authControllerProvider.notifier).signOut();
+                    if (context.mounted) context.goNamed(AppRoute.login);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -287,7 +325,7 @@ class _Row extends StatelessWidget {
             const SizedBox(width: 6),
             Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.outline,
+              color: Theme.of(context).colorScheme.outline,
               size: 18,
             ),
           ],

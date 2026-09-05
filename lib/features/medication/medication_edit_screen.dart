@@ -4,12 +4,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/router/nav_utils.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../shared/models/medication_model.dart';
+import '../../shared/providers/auth_provider.dart';
 import '../../shared/providers/medication_provider.dart';
 import '../../shared/providers/supabase_providers.dart';
 import '../../shared/widgets/primary_button.dart';
@@ -122,39 +124,54 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
       );
       return;
     }
-    if (!_isEdit) {
-      // Create path is handled by the onboarding flow.
-      setState(
-        () => _error = 'New medications are added during onboarding for now.',
-      );
-      return;
-    }
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
       final svc = ref.read(supabaseServiceProvider);
-      final updated = MedicationModel(
-        id: widget.medication!.id,
-        userId: widget.medication!.userId,
-        name: name,
-        scheduleTime: _time,
-        notes: notes,
-        active: widget.medication!.active,
-        createdAt: widget.medication!.createdAt,
-      );
-      await svc.updateMedication(updated);
+      if (_isEdit) {
+        final updated = MedicationModel(
+          id: widget.medication!.id,
+          userId: widget.medication!.userId,
+          name: name,
+          scheduleTime: _time,
+          notes: notes,
+          active: widget.medication!.active,
+          createdAt: widget.medication!.createdAt,
+        );
+        await svc.updateMedication(updated);
+      } else {
+        final user = ref.read(currentSupabaseUserProvider);
+        if (user == null) throw const AuthException('Not signed in.');
+        await svc.createMedication(
+          MedicationModel(
+            id: '',
+            userId: user.id,
+            name: name,
+            scheduleTime: _time,
+            notes: notes,
+            active: true,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+        // First reminder just got scheduled — the OS prompt lands with
+        // context. No-op if already granted.
+        await NotificationService.instance.requestPermissions();
+      }
       ref.invalidate(medicationsProvider);
-      if (!mounted) return;
-      context.pop();
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _busy = false;
         _error = _friendlyError(e);
       });
+      return;
     }
+    // Navigation lives outside the try: a navigation error must never be
+    // reported to the user as a failed save.
+    if (!mounted) return;
+    context.popOrHome();
   }
 
   Future<void> _delete() async {
@@ -188,24 +205,25 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
     try {
       await ref.read(supabaseServiceProvider).deleteMedication(med.id);
       ref.invalidate(medicationsProvider);
-      if (!mounted) return;
-      context.pop();
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _busy = false;
         _error = _friendlyError(e);
       });
+      return;
     }
+    if (!mounted) return;
+    context.popOrHome();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text(_isEdit ? 'Edit medication' : 'New medication'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(_isEdit ? 'Edit medication' : 'Add medication'),
         elevation: 0,
         actions: [
           if (_isEdit)
@@ -291,7 +309,9 @@ class _MedicationEditScreenState extends ConsumerState<MedicationEditScreen> {
                   ],
                   const Spacer(),
                   PrimaryButton(
-                    label: _busy ? 'Saving…' : 'Save',
+                    label: _busy
+                        ? 'Saving…'
+                        : (_isEdit ? 'Save' : 'Add medication'),
                     icon: Icons.check_rounded,
                     loading: _busy,
                     onPressed: _busy ? null : _save,

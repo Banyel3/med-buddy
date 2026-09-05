@@ -4,12 +4,11 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
-import '../../core/router/app_router.dart';
+import '../../core/router/nav_utils.dart';
 import '../../shared/widgets/primary_button.dart';
 import 'controllers/verification_controller.dart';
 
@@ -25,6 +24,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
   CameraController? _camera;
   Future<void>? _init;
   bool _permGranted = false;
+  bool _bootstrapping = false;
 
   @override
   void initState() {
@@ -34,6 +34,19 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
   }
 
   Future<void> _bootstrap() async {
+    // The permission dialog itself pauses/resumes the Activity, which
+    // re-enters here via didChangeAppLifecycleState. Without this guard the
+    // prompt is requested twice per visit.
+    if (_bootstrapping) return;
+    _bootstrapping = true;
+    try {
+      await _bootstrapInner();
+    } finally {
+      _bootstrapping = false;
+    }
+  }
+
+  Future<void> _bootstrapInner() async {
     final status = await Permission.camera.request();
     if (!mounted) return;
     if (!status.isGranted) {
@@ -106,8 +119,11 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
         .confirmDose();
     if (!mounted) return;
     if (ok) {
-      context.goNamed(AppRoute.home);
-      ScaffoldMessenger.of(context).showSnackBar(
+      // Grab the root messenger before leaving so the toast survives the
+      // route change.
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      context.popOrHome();
+      messenger?.showSnackBar(
         const SnackBar(content: Text('Dose verified ✅ streak updated')),
       );
     } else {
@@ -146,7 +162,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen>
               top: 0,
               left: 0,
               right: 0,
-              child: _TopBar(onClose: () => context.pop()),
+              child: _TopBar(onClose: () => context.popOrHome()),
             ),
             Positioned(
               left: 0,
@@ -175,13 +191,26 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    // Scrim: the preview letterboxes to white/black depending on device, so
+    // white-on-white would hide the only exit from this screen.
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withValues(alpha: 0.65),
+            Colors.black.withValues(alpha: 0.0),
+          ],
+        ),
+      ),
       padding: const EdgeInsets.all(AppDimensions.space12),
       child: Row(
         children: [
           IconButton(
             icon: const Icon(Icons.close_rounded, color: AppColors.onPrimary),
             onPressed: onClose,
+            tooltip: 'Close',
           ),
           const SizedBox(width: 4),
           Text(
@@ -499,6 +528,13 @@ class _PermissionDenied extends StatelessWidget {
                   onPressed: onRetry,
                   child: const Text(
                     'Retry',
+                    style: TextStyle(color: AppColors.onPrimary),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => context.popOrHome(),
+                  child: const Text(
+                    'Not now',
                     style: TextStyle(color: AppColors.onPrimary),
                   ),
                 ),

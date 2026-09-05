@@ -126,7 +126,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         label: 'Take it now',
                         icon: Icons.camera_alt_rounded,
                         gradient: false,
-                        onPressed: () => context.goNamed(AppRoute.verification),
+                        onPressed: () =>
+                            context.pushNamed(AppRoute.verification),
                       ),
                       const SizedBox(height: AppDimensions.space12),
                       // The escape hatch. Someone out of medication, in
