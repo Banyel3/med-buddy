@@ -53,6 +53,13 @@ class LockOverlayService : Service() {
         /** User pressed "I can't take it now" — stop, and let Dart log it. */
         const val ACTION_SKIP = "com.medbuddy.medbuddy.LOCK_SKIP"
 
+        /**
+         * User pressed "Verify now" on the overlay: drop the window so the app
+         * underneath is reachable, but keep ringing and keep the lock armed.
+         * The accessibility service re-shows the overlay if they wander off.
+         */
+        const val ACTION_UNCOVER = "com.medbuddy.medbuddy.LOCK_UNCOVER"
+
         const val EXTRA_MED_NAME = "med_name"
 
         private const val CHANNEL_ID = "medbuddy_dose_alarm"
@@ -73,11 +80,22 @@ class LockOverlayService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Promote first, always. Anything that can throw must happen after
-        // this or the service is killed mid-start.
-        startForeground(NOTIFICATION_ID, buildNotification(intent))
+        // this or the service is killed mid-start. On Android 12+ a start
+        // from a background context can be refused outright
+        // (ForegroundServiceStartNotAllowedException); treat that as "no alarm
+        // this time" rather than crashing the process on the main thread.
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(intent))
+        } catch (e: Exception) {
+            Log.e(tag, "startForeground refused — alarm cannot run.", e)
+            LockState.setLocked(this, false)
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         when (intent?.action) {
             ACTION_SHOW -> beginAlarm()
+            ACTION_UNCOVER -> uncoverForVerification()
             ACTION_SKIP -> endAlarm(REASON_SKIPPED)
             ACTION_HIDE -> stopAlarmAndSelf()
             else -> stopAlarmAndSelf()
@@ -88,9 +106,12 @@ class LockOverlayService : Service() {
     // ---- Alarm lifecycle -------------------------------------------------
 
     private fun beginAlarm() {
+        // Re-assert the window every time: the accessibility service sends
+        // ACTION_SHOW when the user leaves the app mid-alarm, and the overlay
+        // may have been dropped by ACTION_UNCOVER.
+        showOverlay()
         if (ringer?.isRinging == true) return
 
-        showOverlay()
         ringer?.start()
 
         // Hard ceiling. Never ring forever: a phone left in another room would
@@ -110,6 +131,20 @@ class LockOverlayService : Service() {
         Log.i(tag, "Alarm ended: $reason")
         PendingOutcomes.add(this, LockState.medId(this), reason)
         stopAlarmAndSelf()
+    }
+
+    private fun uncoverForVerification() {
+        hideOverlay()
+        val launch = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        if (launch != null) {
+            try {
+                startActivity(launch)
+            } catch (e: Exception) {
+                Log.w(tag, "Could not launch app from overlay", e)
+            }
+        }
     }
 
     private fun stopAlarmAndSelf() {
@@ -153,17 +188,21 @@ class LockOverlayService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        return Notification.Builder(this, CHANNEL_ID)
+        val builder = Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("Time for $medName")
             .setContentText("Verify your dose to stop the alarm.")
             .setCategory(Notification.CATEGORY_ALARM)
             .setOngoing(true)
             .setContentIntent(contentPi)
-            // The way back in when no overlay permission was granted. Requires
-            // USE_FULL_SCREEN_INTENT in the manifest, which alarm apps get.
-            .setFullScreenIntent(contentPi, true)
-            .build()
+
+        // The way back in when no overlay can be drawn. Requires
+        // USE_FULL_SCREEN_INTENT in the manifest, which alarm apps get. Only
+        // attach it when it is actually needed: with the overlay up, a
+        // full-screen-intent notification just pins a heads-up over the top
+        // of the camera screen and hides its close button.
+        if (!canShowOverlay()) builder.setFullScreenIntent(contentPi, true)
+        return builder.build()
     }
 
     private fun ensureChannel() {
@@ -188,11 +227,12 @@ class LockOverlayService : Service() {
 
     // ---- Overlay ---------------------------------------------------------
 
+    private fun canShowOverlay(): Boolean =
+        MedBuddyAccessibility.instance != null || Settings.canDrawOverlays(this)
+
     private fun showOverlay() {
         if (overlay != null) return
-        val canDraw = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Settings.canDrawOverlays(this)
-        } else true
+        val canDraw = Settings.canDrawOverlays(this)
 
         val accessibilityActive = MedBuddyAccessibility.instance != null
         if (!accessibilityActive && !canDraw) {
@@ -241,12 +281,18 @@ class LockOverlayService : Service() {
         }
 
         view.findViewById<Button>(R.id.lock_verify)?.setOnClickListener {
-            val launch = packageManager.getLaunchIntentForPackage(packageName)
-            launch?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            if (launch != null) startActivity(launch)
+            // Launching the app while this opaque, touch-consuming window is
+            // still attached puts MedBuddy *under* the overlay. Drop the
+            // window first; the alarm keeps ringing until the dose is verified.
+            uncoverForVerification()
         }
 
-        val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        // TYPE_ACCESSIBILITY_OVERLAY windows carry the accessibility service's
+        // token, so they must be added through *its* WindowManager. Adding one
+        // via a plain Service's WindowManager throws BadTokenException.
+        val wm = (if (accessibilityActive) MedBuddyAccessibility.instance else null)
+            ?.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+            ?: getSystemService(Context.WINDOW_SERVICE) as WindowManager
         try {
             wm.addView(view, params)
             overlay = view

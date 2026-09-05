@@ -17,18 +17,20 @@ class MainActivity : FlutterActivity() {
         super.onCreate(savedInstanceState)
         // A dose alarm has to reach a phone that is face-down, dark and locked.
         // Without these the activity launches behind the keyguard and the user
-        // sees nothing until they happen to pick the phone up.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(
-                android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
-            )
+        // sees nothing until they happen to pick the phone up. Only while an
+        // alarm is live, though — otherwise every launch bypasses the keyguard.
+        if (LockState.restore(this)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(true)
+                setTurnScreenOn(true)
+            } else {
+                @Suppress("DEPRECATION")
+                window.addFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
+                )
+            }
         }
-        LockState.restore(this)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
