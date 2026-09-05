@@ -57,10 +57,11 @@ class ComplianceLogModel {
     'date': date.toIso8601String().substring(0, 10),
     'status': status.name,
     if (imageUrl != null) 'image_url': imageUrl,
-    if (verifiedAt != null) 'verified_at': verifiedAt!.toIso8601String(),
+    if (verifiedAt != null)
+      'verified_at': verifiedAt!.toUtc().toIso8601String(),
     if (faceConfidence != null) 'face_confidence': faceConfidence,
     if (pillConfidence != null) 'pill_confidence': pillConfidence,
-    if (skippedAt != null) 'skipped_at': skippedAt!.toIso8601String(),
+    if (skippedAt != null) 'skipped_at': skippedAt!.toUtc().toIso8601String(),
   };
 
   static ComplianceStatus _parseStatus(String? value) {

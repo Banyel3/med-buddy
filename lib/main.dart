@@ -9,8 +9,10 @@ import 'core/notifications/notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_client.dart';
 import 'features/lock/alarm_outcome_sync.dart';
+import 'features/lock/alarm_settings_provider.dart';
 import 'features/lock/lock_gate.dart';
 import 'features/profile/theme_provider.dart';
+import 'shared/providers/lock_provider.dart';
 import 'shared/providers/medication_provider.dart';
 
 Future<void> main() async {
@@ -28,13 +30,45 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MedBuddyApp()));
 }
 
-class MedBuddyApp extends ConsumerWidget {
+class MedBuddyApp extends ConsumerStatefulWidget {
   const MedBuddyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MedBuddyApp> createState() => _MedBuddyAppState();
+}
+
+class _MedBuddyAppState extends ConsumerState<MedBuddyApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // A dose alarm may already be ringing when the app is opened from the
+    // overlay's "Verify now" or the full-screen notification.
+    ref.read(lockServiceProvider).syncLockState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(lockServiceProvider).syncLockState();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    // Instantiate eagerly: the controller pushes MEDBUDDY_ALARM (build flag /
+    // .env) into native SharedPreferences. Before this it was only created
+    // when Profile was opened, so lock alarms were armed with the pin unset.
+    ref.watch(alarmEnabledProvider);
 
     // Re-schedule local reminders whenever the medication list changes
     // (boot, after create/edit/delete). Keeps notification IDs in sync with

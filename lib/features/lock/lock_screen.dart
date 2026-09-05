@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -39,7 +38,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (!mounted) return;
     await ref.read(alarmOutcomeSyncProvider).drainAndLog();
     if (!mounted) return;
-    context.goNamed(AppRoute.home);
+    // LockGate sits above the Router, so this context has no GoRouter.
+    ref.read(routerProvider).goNamed(AppRoute.home);
   }
 
   @override
@@ -126,7 +126,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         label: 'Take it now',
                         icon: Icons.camera_alt_rounded,
                         gradient: false,
-                        onPressed: () => context.goNamed(AppRoute.verification),
+                        onPressed: () => ref
+                            .read(routerProvider)
+                            .pushNamed(AppRoute.verification),
                       ),
                       const SizedBox(height: AppDimensions.space12),
                       // The escape hatch. Someone out of medication, in

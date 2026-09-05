@@ -42,6 +42,9 @@ object LockAlarmScheduler {
     private const val PREFS = "medbuddy_lock_alarms"
     private const val KEY_ALL_IDS = "active_ids"
 
+    /** Per-med schedule, `name|hour|minute`, so [rescheduleAll] can re-arm after reboot. */
+    private const val KEY_MED_PREFIX = "med_"
+
     fun scheduleForMed(
         context: Context,
         medicationId: String,
@@ -80,9 +83,32 @@ object LockAlarmScheduler {
             am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showIntent), pi)
         }
 
-        rememberAlarm(context, medicationId)
+        rememberAlarm(context, medicationId, medicationName, hour, minute)
         Log.i(TAG, "Scheduled lock alarm for $medicationId at $triggerAt")
         return triggerAt
+    }
+
+    /**
+     * Re-arm every remembered medication. AlarmManager forgets everything on
+     * reboot; [BootReceiver] calls this so the dose alarm survives without a
+     * trip through Dart.
+     */
+    fun rescheduleAll(context: Context): Int {
+        val p = prefs(context)
+        val ids = p.getStringSet(KEY_ALL_IDS, emptySet()) ?: emptySet()
+        var count = 0
+        for (id in ids.toList()) {
+            val raw = p.getString(KEY_MED_PREFIX + id, null) ?: continue
+            val parts = raw.split('|')
+            if (parts.size != 3) continue
+            val hour = parts[1].toIntOrNull() ?: continue
+            val minute = parts[2].toIntOrNull() ?: continue
+            if (hour !in 0..23 || minute !in 0..59) continue
+            scheduleForMed(context, id, parts[0], hour, minute)
+            count++
+        }
+        Log.i(TAG, "Re-armed $count lock alarm(s) after boot.")
+        return count
     }
 
     fun cancel(context: Context, medicationId: String) {
@@ -141,17 +167,29 @@ object LockAlarmScheduler {
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    private fun rememberAlarm(context: Context, medicationId: String) {
+    private fun rememberAlarm(
+        context: Context,
+        medicationId: String,
+        medicationName: String,
+        hour: Int,
+        minute: Int,
+    ) {
         val p = prefs(context)
         val set = (p.getStringSet(KEY_ALL_IDS, emptySet()) ?: emptySet()).toMutableSet()
         set.add(medicationId)
-        p.edit().putStringSet(KEY_ALL_IDS, set).apply()
+        p.edit()
+            .putStringSet(KEY_ALL_IDS, set)
+            .putString(KEY_MED_PREFIX + medicationId, "${medicationName.replace('|', ' ')}|$hour|$minute")
+            .apply()
     }
 
     private fun forgetAlarm(context: Context, medicationId: String) {
         val p = prefs(context)
         val set = (p.getStringSet(KEY_ALL_IDS, emptySet()) ?: emptySet()).toMutableSet()
         set.remove(medicationId)
-        p.edit().putStringSet(KEY_ALL_IDS, set).apply()
+        p.edit()
+            .putStringSet(KEY_ALL_IDS, set)
+            .remove(KEY_MED_PREFIX + medicationId)
+            .apply()
     }
 }

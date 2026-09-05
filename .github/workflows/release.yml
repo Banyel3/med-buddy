@@ -63,9 +63,19 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Stub .env (gitignored, required as bundled asset)
+      - name: Write .env from repo secrets (bundled asset)
+        # The anon key is the client-side publishable key; the URL is public.
+        # Falls back to the placeholder example if the secrets are unset.
         run: |
-          if [ ! -f .env ]; then cp .env.example .env; fi
+          if [ -n "${{ secrets.SUPABASE_URL }}" ]; then
+            {
+              echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}"
+              echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}"
+              echo "MEDBUDDY_LOCK_MODE=soft"
+            } > .env
+          else
+            cp .env.example .env
+          fi
 
       - run: flutter pub get
 
@@ -168,6 +178,9 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     needs: [android-release, ios-release]
+    # Android is the release; the unsigned iOS IPA is a nice-to-have. Publish
+    # whenever Android built, even if the macOS job failed.
+    if: always() && needs.android-release.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -188,6 +201,7 @@ jobs:
 
       - name: Download iOS artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: ios-${{ steps.tag.outputs.name }}
           path: release-out

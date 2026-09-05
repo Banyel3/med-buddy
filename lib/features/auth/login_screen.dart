@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/router/app_router.dart';
+import '../../core/supabase/supabase_client.dart';
+import '../../core/utils/friendly_errors.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../../shared/widgets/primary_button.dart';
 
@@ -28,22 +30,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final ctrl = ref.read(authControllerProvider.notifier);
+    final email = _emailCtrl.text.trim();
     try {
       if (_isSignUp) {
-        await ctrl.signUp(_emailCtrl.text.trim(), _passwordCtrl.text);
+        await ctrl.signUp(email, _passwordCtrl.text);
+        if (!mounted) return;
+        if (SupabaseBootstrap.client.auth.currentSession == null) {
+          // Email confirmation is on: there is no session until they click
+          // the link. Say so instead of pushing them into onboarding, where
+          // the medication step would dead-end on "Sign in first."
+          setState(() => _isSignUp = false);
+          _passwordCtrl.clear();
+          _toast(
+            'Almost there — open the link we sent to $email, then sign in.',
+          );
+          return;
+        }
+        context.goNamed(AppRoute.onboardingWelcome);
       } else {
-        await ctrl.signIn(_emailCtrl.text.trim(), _passwordCtrl.text);
+        await ctrl.signIn(email, _passwordCtrl.text);
+        if (!mounted) return;
+        // Returning users go straight Home. Home shows "Add medication" if
+        // they have none, so nobody is forced back through onboarding.
+        context.goNamed(AppRoute.home);
       }
-      if (!mounted) return;
-      context.goNamed(AppRoute.onboardingWelcome);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Auth failed: $e')));
+      _toast(friendlyError(e));
     }
   }
 
@@ -51,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

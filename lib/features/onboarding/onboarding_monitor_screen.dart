@@ -21,9 +21,9 @@ class OnboardingMonitorScreen extends ConsumerWidget {
         : 'MB-XXXXXX';
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Step 3 of 3'),
         elevation: 0,
       ),

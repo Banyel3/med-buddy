@@ -18,11 +18,12 @@ class SupabaseBootstrap {
       );
     }
 
-    // `publishableKey` is the current name for what the Supabase dashboard
-    // still labels the anon key — same value, `anonKey` is deprecated.
+    // supabase_flutter 2.12.x takes `anonKey` (the value the dashboard labels
+    // the anon/publishable key). Do not use `publishableKey` — that named
+    // param does not exist in this pinned version and breaks the build.
     await Supabase.initialize(
       url: url.isEmpty ? 'https://placeholder.supabase.co' : url,
-      publishableKey: anon.isEmpty ? 'placeholder' : anon,
+      anonKey: anon.isEmpty ? 'placeholder' : anon,
       debug: false,
     );
   }

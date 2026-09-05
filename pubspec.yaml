@@ -39,6 +39,7 @@ dependencies:
 
   # Local preferences (theme, lock mode)
   shared_preferences: ^2.3.2
+  flutter_timezone: ^5.1.0
 
   # NOTE: the Phase 3 lock is native Kotlin behind the `medbuddy/lock`
   # MethodChannel. Do not add flutter_accessibility_service or
