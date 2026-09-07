@@ -28,7 +28,7 @@ dependencies:
   google_mlkit_face_detection: ^0.13.2
   # 0.12 for IsolateInterpreter — inference must not run on the UI isolate.
   tflite_flutter: ^0.12.0
-  image: ^4.2.0
+  image: ^4.9.2
 
   # Notifications. Daily repeats are re-armed by the plugin's own boot
   # receiver; the lock is armed by native AlarmManager (android/.../Lock*.kt).
