@@ -35,7 +35,7 @@ dependencies:
   # No background-worker package is involved — see NotificationService.
   flutter_local_notifications: ^17.2.2
   timezone: ^0.9.4
-  permission_handler: ^12.0.1
+  permission_handler: ^13.0.2
 
   # Local preferences (theme, lock mode)
   shared_preferences: ^2.3.2
